@@ -57,7 +57,6 @@ struct tegra_asoc_audio_clock_info {
 	struct reset_control *clk_cdev1_rst;
 	int clk_cdev1_state;
 	int clk_cdev2_state;
-	struct clk *clk_m;
 	struct clk *clk_pll_p_out1;
 	int set_mclk;
 	int lock_count;
@@ -79,9 +78,6 @@ void tegra_alt_asoc_utils_lock_clk_rate(
 				int lock);
 int tegra_alt_asoc_utils_init(struct tegra_asoc_audio_clock_info *data,
 				struct device *dev, struct snd_soc_card *card);
-
-int tegra_alt_asoc_utils_set_extern_parent(
-	struct tegra_asoc_audio_clock_info *data, const char *parent);
 int tegra_alt_asoc_utils_set_parent(struct tegra_asoc_audio_clock_info *data,
 				int is_i2s_master);
 int tegra_alt_asoc_utils_clk_enable(struct tegra_asoc_audio_clock_info *data);

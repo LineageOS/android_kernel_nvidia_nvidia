@@ -828,15 +828,6 @@ static int tegra_machine_nau8825_init(struct snd_soc_pcm_runtime *rtd)
 static int tegra_machine_rt5677_init(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_soc_card *card = rtd->card;
-	struct tegra_machine *machine = snd_soc_card_get_drvdata(card);
-	int err;
-
-	err = tegra_alt_asoc_utils_set_extern_parent(&machine->audio_clock,
-							"pll_a_out0");
-	if (err < 0) {
-		dev_err(card->dev, "Failed to set extern clk parent\n");
-		return err;
-	}
 
 	snd_soc_dai_set_sysclk(rtd->codec_dai, RT5677_SCLK_S_MCLK, RT5677_SYSCLK, SND_SOC_CLOCK_IN);
 
