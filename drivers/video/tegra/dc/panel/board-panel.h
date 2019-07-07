@@ -90,6 +90,7 @@ extern struct tegra_panel_ops edp_a_1080p_14_0_ops;
 extern struct tegra_panel_ops edp_i_1080p_11_6_ops;
 extern struct tegra_panel_ops lvds_c_1366_14_ops;
 extern struct tegra_panel_ops dsi_a_1080p_14_0_ops;
+extern struct tegra_panel_ops dsi_j_wqxga_10_2_ops;
 extern struct tegra_panel_ops dsi_j_1440_810_5_8_ops;
 extern struct tegra_panel_ops dsi_j_720p_5_ops;
 extern struct tegra_panel_ops dsi_l_720p_5_loki_ops;
