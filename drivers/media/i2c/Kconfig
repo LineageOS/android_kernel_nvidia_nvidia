@@ -6,7 +6,7 @@ menu "NVIDIA overlay Encoders, decoders, sensors and other helper chips"
 config VIDEO_IMX185
 	tristate "IMX185 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	This is a Video4Linux2 sensor-level driver for the Sony
 	IMX185 camera sensor
 
@@ -16,7 +16,7 @@ config VIDEO_IMX185
 config VIDEO_IMX477
         tristate "IMX477 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This driver supports IMX477 camera sensor from Sony
 
 	  To compile this driver as a module, choose M here: the module
@@ -25,7 +25,7 @@ config VIDEO_IMX477
 config VIDEO_IMX219
         tristate "IMX219 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This driver supports IMX219 camera sensor from Sony
 
 	  To compile this driver as a module, choose M here: the module
@@ -34,7 +34,7 @@ config VIDEO_IMX219
 config VIDEO_IMX268
 	tristate "IMX268 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This is a Video4Linux2 sensor-level driver for the Sony
 	  IMX268 camera sensor
 
@@ -44,7 +44,7 @@ config VIDEO_IMX268
 config VIDEO_IMX274
 	tristate "IMX274 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This is a Video4Linux2 sensor-level driver for the Sony
 	  IMX274 camera sensor
 
@@ -54,7 +54,7 @@ config VIDEO_IMX274
 config VIDEO_IMX318
 	tristate "IMX318 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This is a Video4Linux2 sensor-level driver for the Sony
 	  IMX318 camera sensor
 
@@ -64,7 +64,7 @@ config VIDEO_IMX318
 config VIDEO_LC898212
 	tristate "LC898212 focuser support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This driver supports LC898212 camera focuser
 
 	  To compile this driver as a module, choose M here: the module
@@ -73,7 +73,7 @@ config VIDEO_LC898212
 config VIDEO_OV5693
 	tristate "OV5693 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This is a Video4Linux2 sensor-level driver for the OmniVision
 	  OV5693 camera.
 
@@ -83,7 +83,7 @@ config VIDEO_OV5693
 config VIDEO_OV9281
 	tristate "OmniVision OV9281 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This is a Video4Linux2 sensor driver for the OmniVision
 	  OV9281 camera sensor, for use with the tegra isp.
 
@@ -93,7 +93,7 @@ config VIDEO_OV9281
 config VIDEO_OV10823
 	tristate "OmniVision OV10823 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This is a Video4Linux2 sensor driver for the OmniVision
 	  OV10823 camera sensor, for use with the tegra isp.
 
@@ -103,7 +103,7 @@ config VIDEO_OV10823
 config VIDEO_OV23850
 	tristate "OmniVision OV23850 sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This driver supports OmniVision OV23850 camera sensor
 
 	  To compile this driver as a module, choose M here: the module
@@ -122,7 +122,7 @@ config VIDEO_TC358840
 	tristate "Toshiba TC358840 decoder"
 	depends on VIDEO_V4L2 && I2C && VIDEO_V4L2_SUBDEV_API
 	select HDMI
-	---help---
+	help
 	  Support for the Toshiba TC358840 HDMI to MIPI CSI-2 bridge.
 
 	  To compile this driver as a module, choose M here: the
@@ -131,7 +131,7 @@ config VIDEO_TC358840
 config VIDEO_LT6911UXC
         tristate "Lontium LTX6911UXC HDMI to CSI bridge"
 	depends on VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
-	---help---
+	help
 	  This driver supports LT6911UXC bridge from Lontium
 
 	  To compile this driver as a module, choose M here: the module
@@ -158,7 +158,7 @@ config I2C_IOEXPANDER_DESER_MAX9296
 config VIDEO_IMX390
 	tristate "IMX390 camera sensor support"
 	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API && I2C_IOEXPANDER_SER_MAX9295 && I2C_IOEXPANDER_DESER_MAX9296
-	---help---
+	help
 	  This is a Video4Linux2 sensor-level driver for the Sony
 	  IMX390 camera sensor
 
