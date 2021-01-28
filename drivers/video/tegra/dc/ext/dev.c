@@ -1,7 +1,7 @@
 /*
  * dev.c: Device interface for tegradc ext.
  *
- * Copyright (c) 2011-2019, NVIDIA CORPORATION, All rights reserved.
+ * Copyright (c) 2011-2020, NVIDIA CORPORATION, All rights reserved.
  *
  * Author: Robert Morell <rmorell@nvidia.com>
  * Some code based on fbdev extensions written by:
@@ -1818,6 +1818,8 @@ static int tegra_dc_ext_read_user_data(struct tegra_dc_ext_flip_data *data,
 			kdata->avi_colorimetry = udata->avi_colorimetry;
 			kdata->avi_color_components = udata->avi_color_components;
 			kdata->avi_color_quant = udata->avi_color_quant;
+			kdata->avi_it_content = udata->avi_it_content;
+			kdata->avi_scan = udata->avi_scan;
 			data->avi_cache_dirty = true;
 			break;
 		}
