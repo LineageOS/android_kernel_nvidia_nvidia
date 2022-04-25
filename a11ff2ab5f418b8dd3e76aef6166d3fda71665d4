@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "66bc154e_3faf6955",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2022-04-25T05:07:28Z",
+      "side": 1,
+      "message": "Used by the wifi module shipped with the xavier nx devkit",
+      "revId": "a11ff2ab5f418b8dd3e76aef6166d3fda71665d4",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
