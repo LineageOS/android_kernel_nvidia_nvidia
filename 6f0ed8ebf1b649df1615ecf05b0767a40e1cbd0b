@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ea91d998_be73c61d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2022-04-25T05:10:24Z",
+      "side": 1,
+      "message": "Needed by the usb wifi module shipped with the nano 2gb",
+      "revId": "6f0ed8ebf1b649df1615ecf05b0767a40e1cbd0b",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
