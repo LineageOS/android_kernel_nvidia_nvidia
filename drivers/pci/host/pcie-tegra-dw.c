@@ -3047,6 +3047,40 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
 	return 0;
 }
 
+static int tegra_pcie_pinctrl_old_method(struct tegra_pcie_dw *pcie)
+{
+	struct pinctrl *pin = NULL;
+	struct pinctrl_state *pin_state = NULL;
+	int ret;
+
+	pin = devm_pinctrl_get(pcie->dev);
+	if (IS_ERR(pin)) {
+		ret = PTR_ERR(pin);
+		dev_err(pcie->dev, "pinctrl_get failed: %d\n", ret);
+		return ret;
+	}
+	pin_state = pinctrl_lookup_state(pin, "pex_rst");
+	if (!IS_ERR(pin_state)) {
+		ret = pinctrl_select_state(pin, pin_state);
+		if (ret < 0) {
+			dev_err(pcie->dev, "setting pex_rst state fail: %d\n",
+				ret);
+			return ret;
+		}
+	}
+	pin_state = pinctrl_lookup_state(pin, "clkreq");
+	if (!IS_ERR(pin_state)) {
+		ret = pinctrl_select_state(pin, pin_state);
+		if (ret < 0) {
+			dev_err(pcie->dev, "setting clkreq state fail: %d\n",
+				ret);
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
 static int tegra_pcie_dw_probe(struct platform_device *pdev)
 {
 	struct tegra_pcie_dw *pcie;
@@ -3055,8 +3089,6 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
 	struct resource *appl_res;
 	struct resource	*dbi_res;
 	struct resource	*atu_dma_res;
-	struct pinctrl *pin = NULL;
-	struct pinctrl_state *pin_state = NULL;
 	char *name;
 	int ret, i = 0;
 	u32 val = 0;
@@ -3112,29 +3144,11 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
 		iounmap(tsa_addr);
 	}
 
-	pin = devm_pinctrl_get(pcie->dev);
-	if (IS_ERR(pin)) {
-		ret = PTR_ERR(pin);
-		dev_err(pcie->dev, "pinctrl_get failed: %d\n", ret);
-		return ret;
-	}
-	pin_state = pinctrl_lookup_state(pin, "pex_rst");
-	if (!IS_ERR(pin_state)) {
-		ret = pinctrl_select_state(pin, pin_state);
-		if (ret < 0) {
-			dev_err(pcie->dev, "setting pex_rst state fail: %d\n",
-				ret);
+	ret = pinctrl_pm_select_default_state(pcie->dev);
+	if (ret < 0) {
+		ret = tegra_pcie_pinctrl_old_method(pcie);
+		if (ret < 0)
 			return ret;
-		}
-	}
-	pin_state = pinctrl_lookup_state(pin, "clkreq");
-	if (!IS_ERR(pin_state)) {
-		ret = pinctrl_select_state(pin, pin_state);
-		if (ret < 0) {
-			dev_err(pcie->dev, "setting clkreq state fail: %d\n",
-				ret);
-			return ret;
-		}
 	}
 
 	if (!tegra_platform_is_sim()) {
@@ -3148,15 +3162,22 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
 
 	pcie->core_clk = devm_clk_get(&pdev->dev, "core_clk");
 	if (IS_ERR(pcie->core_clk)) {
-		dev_err(&pdev->dev, "Failed to get core clock\n");
-	        return PTR_ERR(pcie->core_clk);
+		pcie->core_clk = devm_clk_get(&pdev->dev, "core");
+		if (IS_ERR(pcie->core_clk)) {
+			dev_err(&pdev->dev, "Failed to get core clock\n");
+		        return PTR_ERR(pcie->core_clk);
+		}
 	}
 
 	if (pcie->is_safety_platform) {
 		pcie->core_clk_m = devm_clk_get(&pdev->dev, "core_clk_m");
 		if (IS_ERR(pcie->core_clk_m)) {
-			dev_err(&pdev->dev, "Failed to get monitor clock\n");
-			return PTR_ERR(pcie->core_clk_m);
+			pcie->core_clk_m = devm_clk_get(&pdev->dev,
+							"core_m");
+			if (IS_ERR(pcie->core_clk_m)) {
+				dev_err(&pdev->dev, "Failed to get monitor clock\n");
+				return PTR_ERR(pcie->core_clk_m);
+			}
 		}
 	}
 
@@ -3173,8 +3194,12 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
 
 	pcie->core_apb_rst = devm_reset_control_get(pcie->dev, "core_apb_rst");
 	if (IS_ERR(pcie->core_apb_rst)) {
-		dev_err(pcie->dev, "PCIE : core_apb_rst reset is missing\n");
-		return PTR_ERR(pcie->core_apb_rst);
+		pcie->core_apb_rst = devm_reset_control_get(pcie->dev, "apb");
+		if (IS_ERR(pcie->core_apb_rst)) {
+			dev_err(pcie->dev,
+				"PCIE : core_apb_rst reset is missing\n");
+			return PTR_ERR(pcie->core_apb_rst);
+		}
 	}
 
 	if (!tegra_platform_is_sim()) {
@@ -3231,8 +3256,12 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
 
 	pcie->core_rst = devm_reset_control_get(pcie->dev, "core_rst");
 	if (IS_ERR(pcie->core_rst)) {
-		dev_err(pcie->dev, "PCIE : core_rst reset is missing\n");
-		return PTR_ERR(pcie->core_rst);
+		pcie->core_rst = devm_reset_control_get(pcie->dev, "core");
+		if (IS_ERR(pcie->core_rst)) {
+			dev_err(pcie->dev,
+				"PCIE : core_rst reset is missing\n");
+			return PTR_ERR(pcie->core_rst);
+		}
 	}
 
 	pp->irq = platform_get_irq_byname(pdev, "intr");
