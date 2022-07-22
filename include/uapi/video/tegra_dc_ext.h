@@ -335,6 +335,7 @@ enum tegra_dc_ext_flip_data_type {
 	TEGRA_DC_EXT_FLIP_USER_DATA_AVI_DATA,
 	TEGRA_DC_EXT_FLIP_USER_DATA_DV_DATA,
 	TEGRA_DC_EXT_FLIP_USER_DATA_AVMUTE_DATA, /* tegra_dc_ext_avi */
+	TEGRA_DC_EXT_FLIP_USER_DATA_ALLM_DATA,
 };
 
 /*
@@ -431,6 +432,10 @@ struct tegra_dc_ext_dv {
 struct tegra_dc_ext_avmute {
 	__u8 set_or_clear;
 	__u8 reserved[25];
+} __attribute__((__packed__));
+
+struct tegra_dc_ext_allm {
+	__u8 allm_mode;
 } __attribute__((__packed__));
 
 /*
@@ -680,6 +685,7 @@ struct tegra_dc_ext_flip_user_data {
 		struct tegra_dc_ext_avi avi_info;
 		struct tegra_dc_ext_dv dv_info;
 		struct tegra_dc_ext_avmute avmute_info;
+		struct tegra_dc_ext_allm allm_info;
 		struct tegra_dc_ext_imp_ptr imp_ptr;
 		struct tegra_dc_ext_imp_flip_tag imp_tag;
 		struct tegra_dc_ext_syncpt post_syncpt; /* out */
@@ -729,6 +735,7 @@ enum tegra_dc_ext_cap_type {
 	TEGRA_DC_EXT_CAP_TYPE_QUANT_SELECTABLE,
 		/* struct tegra_dc_ext_quant_caps */
 	TEGRA_DC_EXT_CAP_TYPE_DV_SINK, /* struct tegra_dc_ext_dv_caps */
+	TEGRA_DC_EXT_CAP_TYPE_ALLM_SINK, /* struct tegra_dc_ext_allm_caps */
 	TEGRA_DC_EXT_CAP_TYPE_MAX,
 };
 
@@ -990,6 +997,14 @@ struct tegra_dc_ext_dv_caps {
 		struct tegra_dc_ext_dv_caps_vsvdb_v1_12b v1_12b;
 		struct tegra_dc_ext_dv_caps_vsvdb_v2 v2;
 	};
+} __attribute__((__packed__));
+
+/*
+ * tegra_dc_ext_allm_caps: Incorporates target display's allm capabilities.
+ * allm_mode: indicates whether allm mode is available or not.
+ */
+struct tegra_dc_ext_allm_caps {
+	__u8 allm_mode;
 } __attribute__((__packed__));
 
 /*

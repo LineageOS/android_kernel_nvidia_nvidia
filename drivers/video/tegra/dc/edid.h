@@ -213,6 +213,9 @@ void tegra_edid_get_ex_dv_cap_info(struct tegra_edid *edid,
 u16 tegra_edid_get_quant_cap(struct tegra_edid *edid);
 u16 tegra_edid_get_max_clk_rate(struct tegra_edid *edid);
 bool tegra_edid_is_scdc_present(struct tegra_edid *edid);
+bool tegra_edid_is_allm_present(struct tegra_edid *edid);
+int tegra_edid_get_ex_allm_cap_info(struct tegra_edid *edid,
+				struct tegra_dc_ext_allm_caps *allm_cap_info);
 bool tegra_edid_is_420db_present(struct tegra_edid *edid);
 bool tegra_edid_require_dv_vsif(struct tegra_edid *edid);
 bool tegra_edid_support_dv_std_422(struct tegra_edid *edid);
