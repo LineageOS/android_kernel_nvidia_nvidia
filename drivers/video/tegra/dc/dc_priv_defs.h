@@ -4,7 +4,7 @@
  * Copyright (C) 2010 Google, Inc.
  * Author: Erik Gilling <konkers@android.com>
  *
- * Copyright (c) 2010-2020, NVIDIA CORPORATION, All rights reserved.
+ * Copyright (c) 2010-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -130,6 +130,8 @@ struct tegra_dc_out_ops {
 	int (*set_dv)(struct tegra_dc *dc, struct tegra_dc_ext_dv *dv);
 	/* Configure controller for avmute update */
 	int (*set_avmute)(struct tegra_dc *dc, struct tegra_dc_ext_avmute *avmute);
+	/* Configure controller for allm mode update */
+	int (*set_allm)(struct tegra_dc *dc, struct tegra_dc_ext_allm *allm);
 	/* shutdown the serial interface */
 	void (*shutdown_interface)(struct tegra_dc *dc);
 	u32 (*get_crc)(struct tegra_dc *dc);

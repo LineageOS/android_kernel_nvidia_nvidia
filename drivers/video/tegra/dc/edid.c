@@ -38,11 +38,11 @@ struct tegra_edid_pvt {
 	bool				support_audio;
 	bool				scdc_present;
 	bool				db420_present;
-	bool				hfvsdb_present;
 	bool				support_yuv422;
 	bool				support_yuv444;
 	bool				rgb_quant_selectable;
 	bool				yuv_quant_selectable;
+	bool				allm_present;
 	u16			color_depth_flag;
 	u16			max_tmds_char_rate_hf_mhz;
 	u16			max_tmds_char_rate_hllc_mhz;
@@ -554,11 +554,13 @@ static int tegra_edid_parse_ext_block(const u8 *raw, int idx,
 			if ((ptr[1] == 0xd8) &&
 				(ptr[2] == 0x5d) &&
 				(ptr[3] == 0xc4)) {
-				edid->hfvsdb_present = true;
+				/* Read Sink Capability Data Structure (SCDS) */
 				edid->color_depth_flag |= ptr[7] &
 							TEGRA_DC_Y420_MASK;
 				edid->max_tmds_char_rate_hf_mhz = ptr[5] * 5;
 				edid->scdc_present = (ptr[6] >> 7) & 0x1;
+				if (len >= 8)
+					edid->allm_present = (ptr[8] >> 1) & 0x1;
 			}
 
 			/* OUI for Nvidia */
@@ -651,7 +653,16 @@ static int tegra_edid_parse_ext_block(const u8 *raw, int idx,
 				}
 				break;
 			case CEA_DATA_BLOCK_EXT_VSVDB:
-			    tegra_edid_parse_vsvdb(edid, ptr);
+				tegra_edid_parse_vsvdb(edid, ptr);
+				break;
+			case CEA_DATA_BLOCK_EXT_SCDB:
+				/* Read Sink Capability Data Structure (SCDS) */
+				edid->color_depth_flag |= ptr[7] &
+							TEGRA_DC_Y420_MASK;
+				edid->max_tmds_char_rate_hf_mhz = ptr[5] * 5;
+				edid->scdc_present = (ptr[6] >> 7) & 0x1;
+				if (len >= 8)
+					edid->allm_present = (ptr[8] >> 1) & 0x1;
 				break;
 			};
 
@@ -820,6 +831,19 @@ int tegra_edid_get_ex_quant_cap_info(struct tegra_edid *edid,
 	return 0;
 }
 
+int tegra_edid_get_ex_allm_cap_info(struct tegra_edid *edid,
+			struct tegra_dc_ext_allm_caps *allm_cap_info)
+{
+	if (!edid || !edid->data) {
+		pr_warn("edid invalid\n");
+		return -EINVAL;
+	}
+
+	allm_cap_info->allm_mode = edid->data->allm_present;
+
+	return 0;
+}
+
 /* hdmi spec mandates sink to specify correct max_tmds_clk only for >165MHz */
 u16 tegra_edid_get_max_clk_rate(struct tegra_edid *edid)
 {
@@ -887,23 +911,17 @@ bool tegra_edid_is_scdc_present(struct tegra_edid *edid)
 		return false;
 	}
 
-	if (edid->data->scdc_present &&
-		!tegra_edid_is_hfvsdb_present(edid)) {
-		pr_warn("scdc presence incorrectly parsed\n");
-		dump_stack();
-	}
-
 	return edid->data->scdc_present;
 }
 
-bool tegra_edid_is_hfvsdb_present(struct tegra_edid *edid)
+bool tegra_edid_is_allm_present(struct tegra_edid *edid)
 {
 	if (!edid || !edid->data) {
 		pr_warn("edid invalid\n");
 		return false;
 	}
 
-	return edid->data->hfvsdb_present;
+	return edid->data->allm_present;
 }
 
 bool tegra_edid_is_420db_present(struct tegra_edid *edid)

@@ -1,7 +1,7 @@
 /*
  * hdmi2.0.c: hdmi2.0 driver.
  *
- * Copyright (c) 2014-2021, NVIDIA CORPORATION, All rights reserved.
+ * Copyright (c) 2014-2022, NVIDIA CORPORATION. All rights reserved.
  * Author: Animesh Kishore <ankishore@nvidia.com>
  *
  * This software is licensed under the terms of the GNU General Public
@@ -360,8 +360,7 @@ static bool tegra_hdmi_fb_mode_filter(const struct tegra_dc *dc,
 	/* some non-compliant edids list 420vdb modes in vdb */
 	if ((mode->vmode & FB_VMODE_Y420) &&
 		!(mode->flag & FB_MODE_IS_FROM_VAR) &&
-		!(tegra_edid_is_hfvsdb_present(hdmi->edid) &&
-		tegra_edid_is_scdc_present(hdmi->edid)) &&
+		!(tegra_edid_is_scdc_present(hdmi->edid)) &&
 		tegra_edid_is_420db_present(hdmi->edid)) {
 		mode->vmode &= ~FB_VMODE_Y420;
 		mode->vmode |= FB_VMODE_Y420_ONLY;
@@ -386,8 +385,7 @@ static bool tegra_hdmi_fb_mode_filter(const struct tegra_dc *dc,
 	 */
 	if (((tegra_hdmi_mode_min_tmds_rate(mode) / 1000 >= 340) &&
 		!(mode->flag & FB_MODE_IS_FROM_VAR)) &&
-		(!tegra_edid_is_hfvsdb_present(hdmi->edid) ||
-		!tegra_edid_is_scdc_present(hdmi->edid)))
+		(!tegra_edid_is_scdc_present(hdmi->edid)))
 		return false;
 
 	/* Check if the mode's pixel clock is more than the max rate*/
@@ -2559,6 +2557,55 @@ static void tegra_hdmi_dv_infoframe(struct tegra_hdmi *hdmi)
 	}
 }
 
+static void tegra_hdmi_forum_infoframe_update(struct tegra_hdmi *hdmi)
+{
+	struct hdmi_forum_infoframe *allm = &hdmi->allm;
+
+	memset(&hdmi->allm, 0, sizeof(hdmi->allm));
+
+	/* PB1 - PB3 */
+	allm->oui = HDMI_FORUM_LLC_OUI;
+
+	/* PB4 */
+	allm->version = 0x1;
+
+	/* PB5 */
+	allm->valid_3d = 0x0;
+	if (hdmi->allm_mode)
+		allm->allm_mode = 0x1;
+	else
+		allm->allm_mode = 0x0;
+	allm->res2 = 0x0;
+	allm->ccbpc = 0x0;
+}
+
+static void tegra_hdmi_forum_infoframe(struct tegra_hdmi *hdmi)
+{
+	struct tegra_dc_sor_data *sor = hdmi->sor;
+
+	if (hdmi->dvi)
+		return;
+
+	/* disable vsi infoframe before configuring */
+	tegra_sor_writel(sor, NV_SOR_HDMI_VSI_INFOFRAME_CTRL, 0);
+
+	tegra_hdmi_forum_infoframe_update(hdmi);
+
+	tegra_hdmi_infoframe_pkt_write(hdmi, NV_SOR_HDMI_VSI_INFOFRAME_HEADER,
+					HDMI_INFOFRAME_TYPE_VENDOR,
+					HDMI_INFOFRAME_VS_VENDOR,
+					HDMI_INFOFRAME_LEN_VENDOR_ALLM,
+					&hdmi->allm, sizeof(hdmi->allm),
+					false);
+
+	/* Send infoframe every frame, checksum hw generated */
+	tegra_sor_writel(sor, NV_SOR_HDMI_VSI_INFOFRAME_CTRL,
+		NV_SOR_HDMI_VSI_INFOFRAME_CTRL_ENABLE_YES |
+		NV_SOR_HDMI_VSI_INFOFRAME_CTRL_OTHER_DISABLE |
+		NV_SOR_HDMI_VSI_INFOFRAME_CTRL_SINGLE_DISABLE |
+		NV_SOR_HDMI_VSI_INFOFRAME_CTRL_CHECKSUM_ENABLE);
+}
+
 static void tegra_hdmi_hdr_infoframe_update(struct tegra_hdmi *hdmi)
 {
 	struct hdmi_hdr_infoframe *hdr = &hdmi->hdr;
@@ -3097,6 +3144,8 @@ static int tegra_hdmi_controller_enable(struct tegra_hdmi *hdmi)
 				HDMI_INFOFRAME_LEN_VENDOR_LLC);
 		tegra_hdmi_avi_infoframe(hdmi);
 		tegra_hdmi_spd_infoframe(hdmi);
+		/* on controller enable, keep ALLM disabled */
+		hdmi->allm_mode = false;
 	}
 
 	if (dc->out->vrr_hotplug_state == TEGRA_HPD_STATE_NORMAL)
@@ -3616,6 +3665,26 @@ static int tegra_dc_hdmi_set_dv(struct tegra_dc *dc, struct tegra_dc_ext_dv *dv)
 	return ret;
 }
 
+static int tegra_dc_hdmi_set_allm(struct tegra_dc *dc,
+				  struct tegra_dc_ext_allm *allm)
+{
+	struct tegra_hdmi *hdmi = tegra_dc_get_outdata(dc);
+
+	if (!tegra_edid_is_allm_present(dc->edid))
+		return -1;
+
+	if (hdmi->allm_mode == allm->allm_mode)
+		return 0;
+
+	/* update hdmi allm mode with requested value */
+	hdmi->allm_mode = allm->allm_mode;
+
+	/* update allm infoframe */
+	tegra_hdmi_forum_infoframe(hdmi);
+
+	return 0;
+}
+
 static int tegra_dc_hdmi_set_avmute(struct tegra_dc *dc,
 				    struct tegra_dc_ext_avmute *avmute)
 {
@@ -4006,8 +4075,6 @@ static int tegra_hdmi_status_dbg_show(struct seq_file *m, void *unused)
 	seq_printf(m, "hotplug state: %d\n", tegra_dc_hpd(dc));
 	seq_printf(m, "SCDC present: %d\n",
 		tegra_edid_is_scdc_present(hdmi->edid));
-	seq_printf(m, "Forum VSDB present: %d\n",
-		tegra_edid_is_hfvsdb_present(hdmi->edid));
 	seq_printf(m, "YCbCr4:2:0 VDB present: %d\n",
 		tegra_edid_is_420db_present(hdmi->edid));
 
@@ -4216,6 +4283,7 @@ struct tegra_dc_out_ops tegra_dc_hdmi2_0_ops = {
 	.set_avi = tegra_dc_hdmi_set_avi,
 	.set_dv = tegra_dc_hdmi_set_dv,
 	.set_avmute = tegra_dc_hdmi_set_avmute,
+	.set_allm = tegra_dc_hdmi_set_allm,
 	.postpoweron = tegra_dc_hdmi_postpoweron,
 	.shutdown_interface = tegra_dc_hdmi_sor_sleep,
 	.get_crc = tegra_dc_hdmi_sor_crc_check,
