@@ -1,7 +1,7 @@
 /*
  * hdmi2.0.h: hdmi2.0 driver.
  *
- * Copyright (c) 2014-2020, NVIDIA CORPORATION, All rights reserved.
+ * Copyright (c) 2014-2022, NVIDIA CORPORATION. All rights reserved.
  * Author: Animesh Kishore <ankishore@nvidia.com>
  *
  * This software is licensed under the terms of the GNU General Public
@@ -369,8 +369,10 @@ struct hdmi_audio_infoframe {
 
 #define HDMI_LICENSING_LLC_OUI		(0x000c03)
 #define DV_IEEE_LLC_OUI			(0x00D046)
+#define HDMI_FORUM_LLC_OUI		(0xC45DD8)
 #define HDMI_INFOFRAME_LEN_VENDOR_LLC	(6)
 #define HDMI_INFOFRAME_LEN_VENDOR_DV	(24)
+#define HDMI_INFOFRAME_LEN_VENDOR_ALLM	(5)
 
 enum {
 	HDMI_VENDOR_VIDEO_FORMAT_NONE,
@@ -450,6 +452,25 @@ struct hdmi_dv_infoframe {
 	u32 res9:32;
 } __packed;
 
+/* all fields little endian */
+struct hdmi_forum_infoframe {
+	/* PB0 */
+	u32 csum:8;
+
+	/* PB1, PB2, PB3 */
+	u32 oui:24;	/* organizationally unique identifier */
+
+	/* PB4 */
+	u32 version:8;
+
+	/* PB5 */
+	u32 valid_3d:1;
+	u32 allm_mode:1;
+	u32 res2:2;
+	u32 ccbpc:4;
+} __packed;
+
+
 enum {
 	TEGRA_HDMI_SAFE_CLK = 1,
 	TEGRA_HDMI_BRICK_CLK = 2,
@@ -477,12 +498,15 @@ struct tegra_hdmi {
 	struct hdmi_avi_infoframe avi;
 	struct hdmi_hdr_infoframe hdr;
 	struct hdmi_dv_infoframe dv;
+	struct hdmi_forum_infoframe allm;
 	struct hdmi_spd_infoframe spd;
 	u8 hdmi_dv_signal;
 	bool enabled;
 	atomic_t clock_refcount;
 
 	bool avmute; /* false: avmute clear, true: avmute set */
+
+	bool allm_mode; /* false: no allm mode, true: allm mode set */
 
 	bool dvi;
 

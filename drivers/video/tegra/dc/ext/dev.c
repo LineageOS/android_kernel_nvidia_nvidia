@@ -1,7 +1,7 @@
 /*
  * dev.c: Device interface for tegradc ext.
  *
- * Copyright (c) 2011-2021, NVIDIA CORPORATION, All rights reserved.
+ * Copyright (c) 2011-2022, NVIDIA CORPORATION. All rights reserved.
  *
  * Author: Robert Morell <rmorell@nvidia.com>
  * Some code based on fbdev extensions written by:
@@ -116,7 +116,9 @@ struct tegra_dc_ext_flip_data {
 	struct tegra_dc_ext_avi avi_info;
 	struct tegra_dc_ext_dv dv_data;
 	struct tegra_dc_ext_avmute avmute_data;
+	struct tegra_dc_ext_allm allm_data;
 	bool avmute_cache_dirty;
+	bool allm_cache_dirty;
 	bool dv_cache_dirty;
 	bool hdr_cache_dirty;
 	bool avi_cache_dirty;
@@ -1214,6 +1216,10 @@ static void tegra_dc_ext_flip_worker(struct kthread_work *work)
 			if (dc->out_ops && dc->out_ops->set_avmute)
 				dc->out_ops->set_avmute(dc, &data->avmute_data);
 
+		if (data->allm_cache_dirty)
+			if (dc->out_ops && dc->out_ops->set_allm)
+				dc->out_ops->set_allm(dc, &data->allm_data);
+
 		dc->blanked = false;
 		if (dc->out_ops && dc->out_ops->vrr_enable)
 				dc->out_ops->vrr_enable(dc,
@@ -1808,6 +1814,17 @@ static int tegra_dc_ext_read_user_data(struct tegra_dc_ext_flip_data *data,
 
 			kdata->set_or_clear = udata->set_or_clear;
 			data->avmute_cache_dirty = true;
+			break;
+		}
+		case TEGRA_DC_EXT_FLIP_USER_DATA_ALLM_DATA:
+		{
+			struct tegra_dc_ext_allm *kdata =
+				&data->allm_data;
+			struct tegra_dc_ext_allm *udata =
+				&flip_user_data[i].allm_info;
+
+			kdata->allm_mode = udata->allm_mode;
+			data->allm_cache_dirty = true;
 			break;
 		}
 		case TEGRA_DC_EXT_FLIP_USER_DATA_IMP_TAG:
@@ -2660,6 +2677,19 @@ static int tegra_dc_get_cap_quant_info(struct tegra_dc_ext_user *user,
 	return ret;
 }
 
+static int tegra_dc_get_cap_allm_info(struct tegra_dc_ext_user *user,
+				struct tegra_dc_ext_allm_caps *allm_cap_info)
+{
+	int ret = 0;
+	struct tegra_dc *dc = user->ext->dc;
+	struct tegra_edid *dc_edid = dc->edid;
+
+	if (dc_edid)
+		ret = tegra_edid_get_ex_allm_cap_info(dc_edid, allm_cap_info);
+
+	return ret;
+}
+
 static void tegra_dc_get_cap_dv_info(struct tegra_dc_ext_user *user,
 				struct tegra_dc_ext_dv_caps *dv_cap_info)
 {
@@ -2725,6 +2755,18 @@ static int tegra_dc_get_caps(struct tegra_dc_ext_user *user,
 				return -EFAULT;
 			}
 			kfree(dv_cap_info);
+			break;
+		}
+		case TEGRA_DC_EXT_CAP_TYPE_ALLM_SINK:
+		{
+			struct tegra_dc_ext_allm_caps allm_cap_info;
+
+			ret = tegra_dc_get_cap_allm_info(user, &allm_cap_info);
+			if (copy_to_user((void __user *)(uintptr_t)
+				caps[i].data, &allm_cap_info,
+				sizeof(allm_cap_info))) {
+				return -EFAULT;
+			}
 			break;
 		}
 		default:
