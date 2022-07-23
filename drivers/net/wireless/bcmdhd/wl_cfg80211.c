@@ -2,7 +2,7 @@
  * Linux cfg80211 driver
  *
  * Copyright (C) 1999-2015, Broadcom Corporation
- * Copyright (c) 2019 NVIDIA Corporation. All rights reserved.
+ * Copyright (c) 2019-2022 NVIDIA Corporation. All rights reserved.
  *
  * Portions contributed by Nvidia
  * Copyright (c) 2015-2020 NVIDIA Corporation. All rights reserved.
@@ -4606,6 +4606,7 @@ wl_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
 	u16 reason_code)
 {
 	struct bcm_cfg80211 *cfg = wiphy_priv(wiphy);
+	struct wireless_dev *wdev;
 	scb_val_t scbval;
 	bool act = false;
 	s32 err = 0;
@@ -4650,6 +4651,7 @@ wl_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
 		if (cfg->scan_request) {
 			wl_notify_escan_complete(cfg, dev, true, true);
 		}
+		reinit_completion(&cfg->send_disconnected);
 		if (wl_get_drv_status(cfg, CONNECTING, dev) ||
 			wl_get_drv_status(cfg, CONNECTED, dev)) {
 				wl_set_drv_status(cfg, DISCONNECTING, dev);
@@ -4665,13 +4667,14 @@ wl_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
 				}
 				wl_cfg80211_wait_for_disconnection(cfg, dev);
 		}
-		reinit_completion(&cfg->send_disconnected);
 		/* Wait till link down event is received from FW */
 		ret = wait_for_completion_interruptible_timeout(
 			&cfg->send_disconnected,
 			msecs_to_jiffies(DISCONNECT_WAIT_TIME));
 		if (!ret) {
-			WL_ERR(("Link down event is not received\n"));
+			WL_ERR(("Link Down event not received. call reset\n"));
+			wdev = (struct wireless_dev *)cfg->wdev;
+			wl_cfg80211_hang(wdev->netdev, WLAN_REASON_UNSPECIFIED);
 		} else if (ret == -ERESTARTSYS) {
 			WL_ERR(("Wait aborted by a signal\n"));
 		}
@@ -9409,7 +9412,6 @@ wl_notify_connect_status(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
 					ndev->name, ntoh32(e->status)));
 				return 0;
 			}
-
 #ifdef P2PLISTEN_AP_SAMECHN
 			if (ndev == bcmcfg_to_prmry_ndev(cfg)) {
 				wl_cfg80211_set_p2p_resp_ap_chn(ndev, 0);
