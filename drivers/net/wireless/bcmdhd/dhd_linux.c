@@ -6015,7 +6015,7 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 #ifdef PROP_TXSTATUS
 	int wlfc_enable = TRUE;
 #ifndef DISABLE_11N
-	uint32 hostreorder = 1;
+	uint32 hostreorder = 0;
 #endif /* DISABLE_11N */
 #endif /* PROP_TXSTATUS */
 #endif 
