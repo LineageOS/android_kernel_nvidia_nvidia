@@ -5,7 +5,7 @@
  * Copyright (C) 1999-2015, Broadcom Corporation
  *
  * Portions contributed by Nvidia
- * Copyright (C) 2015-2022, NVIDIA Corporation. All rights reserved.
+ * Copyright (C) 2015-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
@@ -3099,12 +3099,6 @@ dhd_rx_frame(dhd_pub_t *dhdp, int ifidx, void *pktbuf, int numpkt, uint8 chan)
 					DHD_ERROR(("ifidx:%d DHCP - REQUEST [RX]\n", ifidx));
 				} else if (dump_hex == 0x0105) {
 					DHD_ERROR(("ifidx:%d DHCP - ACK [RX]\n", ifidx));
-#ifdef CONFIG_BCMDHD_CUSTOM_NET_BW_EST_TEGRA
-					/* activate bw_estimator since DHCP is completed
-					 * the actual bw can never be one. So using value 1 as flag
-					 */
-					bcmdhd_stat.driver_stat.cur_bw_est = 1;
-#endif /* CONFIG_BCMDHD_CUSTOM_NET_BW_EST_TEGRA */
 				} else {
 					DHD_ERROR(("ifidx:%d DHCP - 0x%X [RX]\n", dump_hex, ifidx));
 				}
