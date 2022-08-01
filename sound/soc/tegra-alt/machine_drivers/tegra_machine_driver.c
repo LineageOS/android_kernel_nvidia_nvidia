@@ -28,6 +28,7 @@
 #include <sound/pcm_params.h>
 #include <sound/soc.h>
 #include <dt-bindings/sound/tas2552.h>
+#include "rt5640.h"
 #include "rt5659.h"
 #include "sgtl5000.h"
 #include "tegra_asoc_machine_alt.h"
@@ -184,6 +185,16 @@ static int tegra_machine_dai_init(struct snd_soc_pcm_runtime *runtime,
 	rtd = snd_soc_get_pcm_runtime(card, "rt565x-playback");
 	if (rtd) {
 		err = snd_soc_dai_set_sysclk(rtd->codec_dai, RT5659_SCLK_S_MCLK,
+					     aud_mclk, SND_SOC_CLOCK_IN);
+		if (err < 0) {
+			dev_err(card->dev, "codec_dai clock not set\n");
+			return err;
+		}
+	}
+
+	rtd = snd_soc_get_pcm_runtime(card, "rt5640-playback");
+	if (rtd) {
+		err = snd_soc_dai_set_sysclk(rtd->codec_dai, RT5640_SCLK_S_MCLK,
 					     aud_mclk, SND_SOC_CLOCK_IN);
 		if (err < 0) {
 			dev_err(card->dev, "codec_dai clock not set\n");
@@ -392,7 +403,7 @@ static int tegra_machine_fepi_init(struct snd_soc_pcm_runtime *rtd)
 	return 0;
 }
 
-static int tegra_machine_rt565x_init(struct snd_soc_pcm_runtime *rtd)
+static int tegra_machine_rt56xx_init(struct snd_soc_pcm_runtime *rtd, int codec_type)
 {
 	struct snd_soc_card *card = rtd->card;
 	struct snd_soc_jack *jack;
@@ -415,7 +426,17 @@ static int tegra_machine_rt565x_init(struct snd_soc_pcm_runtime *rtd)
 		return err;
 	}
 
-	err = rt5659_set_jack_detect(rtd->codec, jack);
+	switch (codec_type) {
+		case 5640:
+			err = rt5640_set_jack(rtd->codec, jack);
+			break;
+		case 5659:
+			err = rt5659_set_jack_detect(rtd->codec, jack);
+			break;
+		default:
+			err = -EOPNOTSUPP;
+			break;
+	}
 	if (err) {
 		dev_err(card->dev, "Failed to set jack for RT565x: %d\n", err);
 		return err;
@@ -434,6 +455,16 @@ static int tegra_machine_rt565x_init(struct snd_soc_pcm_runtime *rtd)
 	return 0;
 }
 
+static int tegra_machine_rt565x_init(struct snd_soc_pcm_runtime *rtd)
+{
+	return tegra_machine_rt56xx_init(rtd, 5659);
+}
+
+static int tegra_machine_rt5640_init(struct snd_soc_pcm_runtime *rtd)
+{
+	return tegra_machine_rt56xx_init(rtd, 5640);
+}
+
 static int codec_init(struct tegra_machine *machine)
 {
 	struct snd_soc_dai_link *dai_links = machine->asoc->dai_links;
@@ -449,6 +480,9 @@ static int codec_init(struct tegra_machine *machine)
 		if (strstr(dai_links[i].name, "rt565x-playback") ||
 		    strstr(dai_links[i].name, "rt565x-codec-sysclk-bclk1"))
 			dai_links[i].init = tegra_machine_rt565x_init;
+		else if (strstr(dai_links[i].name, "rt5640-playback") ||
+		    strstr(dai_links[i].name, "rt5640-codec-sysclk-bclk1"))
+			dai_links[i].init = tegra_machine_rt5640_init;
 		else if (strstr(dai_links[i].name, "fe-pi-audio-z-v2"))
 			dai_links[i].init = tegra_machine_fepi_init;
 		else if (strstr(dai_links[i].name, "respeaker-4-mic-array"))
