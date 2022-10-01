@@ -62,7 +62,7 @@ int pva_ccq_send_task_t19x(struct pva *pva, u32 queue_id, dma_addr_t task_addr,
 			   u8 batchsize, u32 flags)
 {
 	int err = 0;
-	struct pva_cmd_s cmd = {0};
+	struct pva_cmd_s cmd = {{0}};
 
 	(void)pva_cmd_submit_batch(&cmd, queue_id, task_addr, batchsize, flags);
 
