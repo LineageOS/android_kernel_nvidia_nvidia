@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "34e96402_9c5bb89e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2022-10-02T15:35:47Z",
+      "side": 1,
+      "message": "This change unfortunately breaks compatibility with the l4t 35.1 userspace, but is necessary to retain compatibility with the rel-shield-r android userspace.",
+      "revId": "6eeb276c87e8f1a8fbc4a2eaf942408cdffeec4a",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
