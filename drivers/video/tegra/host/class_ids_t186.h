@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2016, NVIDIA Corporation.  All rights reserved.
+ * Tegra Host Module Class IDs for T186
+ *
+ * Copyright (c) 2014-2016, NVIDIA Corporation.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -14,19 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NVHOST_BUS_CLIENT_T194_H
-#define NVHOST_BUS_CLIENT_T194_H
+#ifndef __NVHOST_CLASS_IDS_T186_H
+#define __NVHOST_CLASS_IDS_T186_H
 
-#include <linux/of.h>
-#include <linux/of_device.h>
-#include <linux/of_platform.h>
-
-#include "dev.h"
-#include "bus_client_t186.h"
-
-enum host1x_aperture_t194_e {
-	HOST1X_MSS_APERTURE = 3
+enum {
+	NV_VIDEO_STREAMING_NVCSI_CLASS_ID	= 0x38,
 };
 
-#endif /* NVHOST_BUS_CLIENT_T194_H */
-
+#endif /*__NVHOST_CLASS_IDS_H */
