@@ -29,6 +29,8 @@
 #include <sound/soc.h>
 #include <dt-bindings/sound/tas2552.h>
 #include "rt5659.h"
+#include "rt5677.h"
+#include "nau8825.h"
 #include "sgtl5000.h"
 #include "tegra_asoc_machine_alt.h"
 #include "tegra210_xbar_alt.h"
@@ -178,6 +180,26 @@ static int tegra_machine_dai_init(struct snd_soc_pcm_runtime *runtime,
 				rtd->cpu_dai->name);
 				return err;
 			}
+		}
+	}
+
+	rtd = snd_soc_get_pcm_runtime(card, "rt5677-playback");
+	if (rtd) {
+		err = snd_soc_dai_set_sysclk(rtd->codec_dai, RT5677_SCLK_S_MCLK,
+					     aud_mclk, SND_SOC_CLOCK_IN);
+		if (err < 0) {
+			dev_err(card->dev, "codec_dai clock not set\n");
+			return err;
+		}
+	}
+
+	rtd = snd_soc_get_pcm_runtime(card, "nau8825-playback");
+	if (rtd) {
+		err = snd_soc_dai_set_sysclk(rtd->codec_dai, NAU8825_CLK_MCLK,
+					     aud_mclk, SND_SOC_CLOCK_IN);
+		if (err < 0) {
+			dev_err(card->dev, "codec_dai clock not set\n");
+			return err;
 		}
 	}
 
@@ -434,6 +456,52 @@ static int tegra_machine_rt565x_init(struct snd_soc_pcm_runtime *rtd)
 	return 0;
 }
 
+static int tegra_machine_nau8825_init(struct snd_soc_pcm_runtime *rtd)
+{
+	struct snd_soc_card *card = rtd->card;
+	struct snd_soc_codec *codec = rtd->codec;
+	struct snd_soc_jack *jack;
+	int err;
+
+	snd_soc_codec_set_sysclk(codec, NAU8825_CLK_MCLK, 0, 0, SND_SOC_CLOCK_IN);
+
+	jack = devm_kzalloc(card->dev, sizeof(struct snd_soc_jack), GFP_KERNEL);
+	if (!jack)
+		return -ENOMEM;
+
+	/* Enable Headset and 4 Buttons Jack detection */
+	err = snd_soc_card_jack_new(card, "Headset Jack",
+	                            SND_JACK_HEADPHONE | SND_JACK_MICROPHONE | SND_JACK_HEADSET |
+	                            SND_JACK_BTN_0 | SND_JACK_BTN_1 |
+	                            SND_JACK_BTN_2 | SND_JACK_BTN_3,
+	                            jack, NULL, 0);
+	if (err) {
+		dev_err(card->dev, "New Headset Jack failed! (%d)\n", err);
+		return err;
+	}
+
+	err = tegra_machine_add_codec_jack_control(card, rtd, jack);
+	if (err) {
+		dev_err(card->dev, "Failed to add jack control: %d\n", err);
+		return err;
+	}
+
+	snd_jack_set_key(jack->jack, SND_JACK_BTN_0, KEY_MEDIA);
+	snd_jack_set_key(jack->jack, SND_JACK_BTN_1, KEY_VOICECOMMAND);
+	snd_jack_set_key(jack->jack, SND_JACK_BTN_2, KEY_VOLUMEUP);
+	snd_jack_set_key(jack->jack, SND_JACK_BTN_3, KEY_VOLUMEDOWN);
+
+	err = nau8825_enable_jack_detect(codec, jack);
+	if (err) {
+		dev_err(card->dev, "Failed to set jack for NAU8825: %d\n", err);
+		return err;
+	}
+
+	snd_soc_dapm_sync(&card->dapm);
+
+	return 0;
+}
+
 static int codec_init(struct tegra_machine *machine)
 {
 	struct snd_soc_dai_link *dai_links = machine->asoc->dai_links;
@@ -449,6 +517,8 @@ static int codec_init(struct tegra_machine *machine)
 		if (strstr(dai_links[i].name, "rt565x-playback") ||
 		    strstr(dai_links[i].name, "rt565x-codec-sysclk-bclk1"))
 			dai_links[i].init = tegra_machine_rt565x_init;
+		else if (strstr(dai_links[i].name, "nau8825-playback"))
+			dai_links[i].init = tegra_machine_nau8825_init;
 		else if (strstr(dai_links[i].name, "fe-pi-audio-z-v2"))
 			dai_links[i].init = tegra_machine_fepi_init;
 		else if (strstr(dai_links[i].name, "respeaker-4-mic-array"))
