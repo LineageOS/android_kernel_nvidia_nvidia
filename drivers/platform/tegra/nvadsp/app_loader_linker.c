@@ -42,7 +42,7 @@
 #endif
 
 #define BITS_PER_INT 32
-#define INIT_OFFSET_MASK (1U < (BITS_PER_INT-1))
+#define INIT_OFFSET_MASK (1U << (BITS_PER_INT-1))
 
 
 #define HWCAP_SWP	(1 << 0)
