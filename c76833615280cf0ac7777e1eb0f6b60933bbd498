@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "db3e5577_a7cc85cb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2022-11-01T21:03:58Z",
+      "side": 1,
+      "message": "This chain allows the nvidia 5.10 kernel to build with clang. However, the result still does not boot. However, these are valid error reports and should be fixed.",
+      "revId": "c76833615280cf0ac7777e1eb0f6b60933bbd498",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
