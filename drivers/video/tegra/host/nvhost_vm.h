@@ -120,7 +120,11 @@ static inline int nvhost_vm_get_hwid(struct platform_device *pdev,
 #endif
 
 	if (!fwspec)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
+		return iommu_get_hwid(pdev->dev.archdata.iommu, &pdev->dev, 0);
+#else
 		return -EINVAL;
+#endif
 
 	if (id >= fwspec->num_ids)
 		return -EINVAL;
