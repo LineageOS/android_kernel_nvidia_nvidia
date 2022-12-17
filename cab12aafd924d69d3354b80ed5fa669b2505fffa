@@ -16,6 +16,23 @@
       "message": "Verified on rey",
       "revId": "cab12aafd924d69d3354b80ed5fa669b2505fffa",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "746dfd70_b8a7f135",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 27741
+      },
+      "writtenOn": "2022-12-17T05:00:55Z",
+      "side": 1,
+      "message": "typical nvidia",
+      "revId": "cab12aafd924d69d3354b80ed5fa669b2505fffa",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
     }
   ]
 }
