@@ -4065,6 +4065,7 @@ static int tegra_dc_set_out(struct tegra_dc *dc, struct tegra_dc_out *out,
 				break;
 			} else if (extcon_hdmi_dc_map[i] == -1) {
 				free_slot = i;
+				break;
 			}
 		}
 
