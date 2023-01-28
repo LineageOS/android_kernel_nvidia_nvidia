@@ -1,7 +1,7 @@
 /*
  * tegra_asoc_util_virt_alt.c - Tegra xbar dai link for machine drivers
  *
- * Copyright (c) 2017-2022, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2017-2018, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -20,6 +20,8 @@
 
 #include "tegra_virt_alt_ivc.h"
 #include "tegra_asoc_util_virt_alt.h"
+
+static struct tegra_audio_metadata_cntx *metadata;
 
 const int tegra186_arad_mux_value[] = {
 	-1, /* None */
@@ -457,30 +459,6 @@ EXPORT_SYMBOL(tegra_virt_t210sfc_set_out_freq);
 int tegra_virt_t210mvc_get_curve_type(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
-	struct soc_mixer_control *mc =
-		(struct soc_mixer_control *)kcontrol->private_value;
-	unsigned int reg = mc->reg;
-	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
-	struct nvaudio_ivc_ctxt *hivc_client =
-		nvaudio_ivc_alloc_ctxt(card->dev);
-	int err;
-	struct nvaudio_ivc_msg msg;
-
-	memset(&msg, 0, sizeof(struct nvaudio_ivc_msg));
-	msg.cmd = NVAUDIO_MVC_GET_CURVETYPE;
-	msg.params.mvc_info.id = reg;
-
-	err = nvaudio_ivc_send_receive(hivc_client,
-			&msg,
-			sizeof(struct nvaudio_ivc_msg));
-
-	if (err < 0) {
-		pr_err("%s: error on ivc_send_receive\n", __func__);
-		return err;
-	}
-
-	ucontrol->value.integer.value[0] = msg.params.mvc_info.curve_type;
-
 	return 0;
 }
 EXPORT_SYMBOL(tegra_virt_t210mvc_get_curve_type);
@@ -516,30 +494,6 @@ EXPORT_SYMBOL(tegra_virt_t210mvc_set_curve_type);
 int tegra_virt_t210mvc_get_tar_vol(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
-	struct soc_mixer_control *mc =
-		(struct soc_mixer_control *)kcontrol->private_value;
-	unsigned int reg = mc->reg;
-	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
-	struct nvaudio_ivc_ctxt *hivc_client =
-			nvaudio_ivc_alloc_ctxt(card->dev);
-	int err;
-	struct nvaudio_ivc_msg msg;
-
-	memset(&msg, 0, sizeof(struct nvaudio_ivc_msg));
-	msg.cmd = NVAUDIO_MVC_GET_TAR_VOL;
-	msg.params.mvc_info.id = reg;
-
-	err = nvaudio_ivc_send_receive(hivc_client,
-			&msg,
-			sizeof(struct nvaudio_ivc_msg));
-
-	if (err < 0) {
-		pr_err("%s: error on ivc_send_receive\n", __func__);
-		return err;
-	}
-
-	ucontrol->value.integer.value[0] = msg.params.mvc_info.tar_vol;
-
 	return 0;
 }
 EXPORT_SYMBOL(tegra_virt_t210mvc_get_tar_vol);
@@ -576,31 +530,6 @@ EXPORT_SYMBOL(tegra_virt_t210mvc_set_tar_vol);
 int tegra_virt_t210mvc_get_mute(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
-
-	struct soc_mixer_control *mc =
-		(struct soc_mixer_control *)kcontrol->private_value;
-	unsigned int reg = mc->reg;
-	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
-	struct nvaudio_ivc_ctxt *hivc_client =
-		nvaudio_ivc_alloc_ctxt(card->dev);
-	int err;
-	struct nvaudio_ivc_msg msg;
-
-	memset(&msg, 0, sizeof(struct nvaudio_ivc_msg));
-	msg.cmd = NVAUDIO_MVC_GET_MUTE;
-	msg.params.mvc_info.id = reg;
-
-	err = nvaudio_ivc_send_receive(hivc_client,
-			&msg,
-			sizeof(struct nvaudio_ivc_msg));
-
-	if (err < 0) {
-		pr_err("%s: error on ivc_send_receive\n", __func__);
-		return err;
-	}
-
-	ucontrol->value.integer.value[0] = msg.params.mvc_info.mute;
-
 	return 0;
 }
 EXPORT_SYMBOL(tegra_virt_t210mvc_get_mute);
@@ -704,6 +633,129 @@ int tegra186_virt_asrc_set_ratio(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 EXPORT_SYMBOL(tegra186_virt_asrc_set_ratio);
+
+int tegra186_virt_asrc_get_int_ratio(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
+	struct nvaudio_ivc_ctxt *hivc_client =
+		nvaudio_ivc_alloc_ctxt(card->dev);
+	struct soc_mixer_control *mc =
+		(struct soc_mixer_control *)kcontrol->private_value;
+	unsigned int reg = mc->reg;
+	int err;
+	struct nvaudio_ivc_msg msg;
+
+	memset(&msg, 0, sizeof(struct nvaudio_ivc_msg));
+	msg.cmd = NVAUDIO_ASRC_GET_INT_RATIO;
+	msg.params.asrc_info.id = 0;
+	msg.params.asrc_info.stream_num = reg;
+
+	err = nvaudio_ivc_send_receive(hivc_client,
+			&msg,
+			sizeof(struct nvaudio_ivc_msg));
+	if (err < 0) {
+		pr_err("%s: error on ivc_send_receive\n", __func__);
+		return err;
+	}
+
+	ucontrol->value.integer.value[0] = msg.params.asrc_info.int_ratio;
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra186_virt_asrc_get_int_ratio);
+
+int tegra186_virt_asrc_set_int_ratio(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
+	struct nvaudio_ivc_ctxt *hivc_client =
+		nvaudio_ivc_alloc_ctxt(card->dev);
+	struct soc_mixer_control *mc =
+		(struct soc_mixer_control *)kcontrol->private_value;
+	unsigned int reg = mc->reg;
+	int err;
+	struct nvaudio_ivc_msg msg;
+
+	memset(&msg, 0, sizeof(struct nvaudio_ivc_msg));
+	msg.cmd = NVAUDIO_ASRC_SET_INT_RATIO;
+	msg.params.asrc_info.id = 0;
+	msg.params.asrc_info.stream_num = reg;
+	msg.params.asrc_info.int_ratio =
+		ucontrol->value.integer.value[0];
+
+	err = nvaudio_ivc_send_retry(hivc_client,
+			&msg,
+			sizeof(struct nvaudio_ivc_msg));
+	if (err < 0) {
+		pr_err("%s: Timedout on ivc_send_retry\n", __func__);
+		return err;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra186_virt_asrc_set_int_ratio);
+int tegra186_virt_asrc_get_frac_ratio(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
+	struct nvaudio_ivc_ctxt *hivc_client =
+		nvaudio_ivc_alloc_ctxt(card->dev);
+	struct soc_mreg_control *mc =
+		(struct soc_mreg_control *)kcontrol->private_value;
+	unsigned int reg = mc->regbase;
+	int err;
+	struct nvaudio_ivc_msg msg;
+
+	memset(&msg, 0, sizeof(struct nvaudio_ivc_msg));
+	msg.cmd = NVAUDIO_ASRC_GET_FRAC_RATIO;
+	msg.params.asrc_info.id = 0;
+	msg.params.asrc_info.stream_num = reg;
+
+	err = nvaudio_ivc_send_receive(hivc_client,
+			&msg,
+			sizeof(struct nvaudio_ivc_msg));
+	if (err < 0) {
+		pr_err("%s: error on ivc_send_receive\n", __func__);
+		return err;
+	}
+
+	ucontrol->value.integer.value[0] = msg.params.asrc_info.frac_ratio;
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra186_virt_asrc_get_frac_ratio);
+
+int tegra186_virt_asrc_set_frac_ratio(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
+	struct nvaudio_ivc_ctxt *hivc_client =
+		nvaudio_ivc_alloc_ctxt(card->dev);
+	struct soc_mreg_control *mc =
+		(struct soc_mreg_control *)kcontrol->private_value;
+	unsigned int reg = mc->regbase;
+	int err;
+	struct nvaudio_ivc_msg msg;
+
+	memset(&msg, 0, sizeof(struct nvaudio_ivc_msg));
+	msg.cmd = NVAUDIO_ASRC_SET_FRAC_RATIO;
+	msg.params.asrc_info.id = 0;
+	msg.params.asrc_info.stream_num = reg;
+	msg.params.asrc_info.frac_ratio =
+		ucontrol->value.integer.value[0];
+
+	err = nvaudio_ivc_send_retry(hivc_client,
+			&msg,
+			sizeof(struct nvaudio_ivc_msg));
+	if (err < 0) {
+		pr_err("%s: Timedout on ivc_send_retry\n", __func__);
+		return err;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra186_virt_asrc_set_frac_ratio);
 
 int tegra186_virt_asrc_get_ratio_source(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
@@ -1450,6 +1502,141 @@ int tegra_virt_i2s_set_rate(
 }
 EXPORT_SYMBOL(tegra_virt_i2s_set_rate);
 
+int tegra_virt_get_metadata(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	uint8_t *m = ucontrol->value.bytes.data;
+
+	tegra_metadata_flood_get(m);
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra_virt_get_metadata);
+
+int tegra_virt_set_metadata(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	uint8_t *m = ucontrol->value.bytes.data;
+
+	tegra_metadata_flood_update(m);
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra_virt_set_metadata);
+
+int tegra_metadata_get_init(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	ucontrol->value.integer.value[0] =
+			metadata->init_metadata_flood;
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra_metadata_get_init);
+
+int tegra_metadata_set_init(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
+
+	if (metadata->init_metadata_flood == ucontrol->value.integer.value[0])
+		return 0;
+
+	if (ucontrol->value.integer.value[0]) {
+		if (tegra_metadata_flood_init(metadata, card->dev)) {
+			dev_err(card->dev, "failed to initialize metadata\n");
+			return -1;
+		}
+	} else {
+		if (metadata->enable_metadata_flood) {
+			dev_err(card->dev, "META flood is enabled, disable first\n");
+			return -1;
+		}
+		tegra_metadata_flood_deinit(metadata, card->dev);
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra_metadata_set_init);
+
+int tegra_metadata_get_enable(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	ucontrol->value.integer.value[0] =
+			metadata->enable_metadata_flood;
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra_metadata_get_enable);
+
+int tegra_metadata_set_enable(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
+
+	if (!metadata->init_metadata_flood) {
+		dev_err(card->dev, "META flood has not been initialized yet\n");
+		return -1;
+	}
+
+	tegra_metadata_flood_enable(metadata, ucontrol->value.integer.value[0],
+								card->dev);
+
+	return 0;
+}
+EXPORT_SYMBOL(tegra_metadata_set_enable);
+
+
+int tegra_metadata_setup(struct platform_device *pdev,
+	struct tegra_audio_metadata_cntx *psad, struct snd_soc_card *card)
+{
+
+	metadata = psad;
+	if (of_property_read_u32_index(pdev->dev.of_node, "nvidia,adma_ch_page",
+			0, &metadata->dma_ch_page)) {
+		dev_info(&pdev->dev, "META dma channel page address dt entry not found\n");
+		goto lb;
+	}
+	if (of_property_read_u32_index(pdev->dev.of_node,
+				"nvidia,sad_admaif_id", 0,
+					&metadata->admaif_id)) {
+		dev_info(&pdev->dev, "META admaif id dt entry not found\n");
+		goto lb;
+	}
+	if (of_property_read_u32_index(pdev->dev.of_node, "nvidia,sad_dma_id",
+			0, &metadata->dma_id)) {
+		dev_info(&pdev->dev, "META dma id dt entry not found\n");
+		goto lb;
+	}
+	if (of_property_read_u32_index(pdev->dev.of_node,
+			"nvidia,sad_header_mode", 0,
+					&metadata->metadata_mode)) {
+		dev_info(&pdev->dev, "META header mode dt entry not found\n");
+		goto lb;
+	}
+
+	if (metadata->metadata_mode == SUBFRAME_MODE) {
+		if (tegra_metadata_flood_init(metadata, card->dev)) {
+			dev_err(&pdev->dev, "failed to initialize metadata\n");
+			goto lb;
+		}
+
+		if (tegra_metadata_flood_enable(metadata, 1, card->dev)) {
+			dev_err(&pdev->dev, "failed to initialize\n");
+			goto lb;
+		}
+	}
+lb:
+	return 0;
+}
+EXPORT_SYMBOL(tegra_metadata_setup);
+
 int tegra_virt_t210ahub_get_regdump(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol)
 {
@@ -1488,42 +1675,6 @@ int tegra_virt_t210ahub_set_regdump(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 EXPORT_SYMBOL(tegra_virt_t210ahub_set_regdump);
-
-
-int tegra_virt_t210adma_get_regdump(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	return 0;
-}
-EXPORT_SYMBOL(tegra_virt_t210adma_get_regdump);
-
-int tegra_virt_t210adma_set_regdump(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	struct soc_mixer_control *mc =
-		(struct soc_mixer_control *)kcontrol->private_value;
-	unsigned int reg = mc->reg;
-	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
-	struct nvaudio_ivc_ctxt *hivc_client =
-		nvaudio_ivc_alloc_ctxt(card->dev);
-	int err;
-	struct nvaudio_ivc_msg msg;
-
-	memset(&msg, 0, sizeof(struct nvaudio_ivc_msg));
-	msg.cmd = NVAUDIO_ADMA_BLOCK_REGDUMP;
-	msg.params.adma_info.channel_num = (uint32_t)reg;
-
-	err = nvaudio_ivc_send_retry(hivc_client,
-			&msg,
-			sizeof(struct nvaudio_ivc_msg));
-	if (err < 0) {
-		pr_err("%s: Timedout on ivc_send_retry\n", __func__);
-		return err;
-	}
-
-	return 0;
-}
-EXPORT_SYMBOL(tegra_virt_t210adma_set_regdump);
 
 //Set mixer fade
 int tegra_virt_t210mixer_set_fade(struct snd_kcontrol *kcontrol,

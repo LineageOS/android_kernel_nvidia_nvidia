@@ -1,7 +1,7 @@
 /*
  * tegra210_ope_alt.c - Tegra210 OPE driver
  *
- * Copyright (c) 2014-2020, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2014-2019, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -24,10 +24,12 @@
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
 #include <linux/regmap.h>
+#include <linux/slab.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/pcm_params.h>
 #include <sound/soc.h>
+#include <linux/pinctrl/consumer.h>
 #include <linux/of_device.h>
 
 #include "tegra210_xbar_alt.h"
@@ -66,10 +68,14 @@ static int tegra210_ope_runtime_resume(struct device *dev)
 	regcache_cache_only(ope->regmap, false);
 	regcache_cache_only(ope->peq_regmap, false);
 	regcache_cache_only(ope->mbdrc_regmap, false);
-	regcache_sync(ope->regmap);
-	regcache_sync(ope->peq_regmap);
-	regcache_sync(ope->mbdrc_regmap);
-	tegra210_peq_restore(ope);
+
+	if (!ope->is_shutdown) {
+		regcache_sync(ope->regmap);
+		regcache_sync(ope->peq_regmap);
+		regcache_sync(ope->mbdrc_regmap);
+
+		tegra210_peq_restore(ope);
+	}
 
 	return 0;
 }
@@ -103,7 +109,7 @@ static int tegra210_ope_set_audio_cif(struct tegra210_ope *ope,
 	cif_conf.audio_bits = audio_bits;
 	cif_conf.client_bits = audio_bits;
 
-	tegra210_xbar_set_cif(ope->regmap, reg, &cif_conf);
+	ope->soc_data->set_audio_cif(ope->regmap, reg, &cif_conf);
 
 	return 0;
 }
@@ -131,15 +137,19 @@ static int tegra210_ope_hw_params(struct snd_pcm_substream *substream,
 		return ret;
 	}
 
-	tegra210_mbdrc_hw_params(dai->codec);
+	ope->soc_data->mbdrc_soc_data.hw_params(dai->codec);
 
 	return ret;
 }
 
 static int tegra210_ope_codec_probe(struct snd_soc_codec *codec)
 {
-	tegra210_peq_codec_init(codec);
-	tegra210_mbdrc_codec_init(codec);
+	struct tegra210_ope *ope = snd_soc_codec_get_drvdata(codec);
+
+	codec->control_data = ope->regmap;
+
+	ope->soc_data->peq_soc_data.codec_init(codec);
+	ope->soc_data->mbdrc_soc_data.codec_init(codec);
 
 	return 0;
 }
@@ -165,6 +175,7 @@ static struct snd_soc_dai_driver tegra210_ope_dais[] = {
 			.rates = SNDRV_PCM_RATE_8000_192000,
 			.formats = SNDRV_PCM_FMTBIT_S8 |
 				SNDRV_PCM_FMTBIT_S16_LE |
+				SNDRV_PCM_FMTBIT_S24_LE |
 				SNDRV_PCM_FMTBIT_S32_LE,
 		},
 	},
@@ -177,6 +188,7 @@ static struct snd_soc_dai_driver tegra210_ope_dais[] = {
 			.rates = SNDRV_PCM_RATE_8000_192000,
 			.formats = SNDRV_PCM_FMTBIT_S8 |
 				SNDRV_PCM_FMTBIT_S16_LE |
+				SNDRV_PCM_FMTBIT_S24_LE |
 				SNDRV_PCM_FMTBIT_S32_LE,
 		},
 		.ops = &tegra210_ope_dai_ops,
@@ -300,72 +312,144 @@ static const struct regmap_config tegra210_ope_regmap_config = {
 	.cache_type = REGCACHE_FLAT,
 };
 
+static const struct tegra210_ope_soc_data soc_data_tegra210 = {
+	.set_audio_cif = tegra210_xbar_set_cif,
+	.peq_soc_data = {
+		.init = tegra210_peq_init,
+		.codec_init = tegra210_peq_codec_init,
+	},
+	.mbdrc_soc_data = {
+		.init = tegra210_mbdrc_init,
+		.codec_init = tegra210_mbdrc_codec_init,
+		.hw_params = tegra210_mbdrc_hw_params,
+	},
+};
+
 static const struct of_device_id tegra210_ope_of_match[] = {
-	{ .compatible = "nvidia,tegra210-ope" },
+	{ .compatible = "nvidia,tegra210-ope", .data = &soc_data_tegra210 },
 	{},
 };
 
 static int tegra210_ope_platform_probe(struct platform_device *pdev)
 {
 	struct tegra210_ope *ope;
-	struct resource *mem;
+	struct resource *mem, *memregion;
 	void __iomem *regs;
 	int ret = 0;
 	const struct of_device_id *match;
+	struct tegra210_ope_soc_data *soc_data;
 
 	pr_info("OPE platform probe\n");
 
 	match = of_match_device(tegra210_ope_of_match, &pdev->dev);
 	if (!match) {
 		dev_err(&pdev->dev, "Error: No device match found\n");
-		return -ENODEV;
+		ret = -ENODEV;
+		goto err;
+	}
+	soc_data = (struct tegra210_ope_soc_data *)match->data;
+
+	ope = devm_kzalloc(&pdev->dev, sizeof(struct tegra210_ope), GFP_KERNEL);
+	if (!ope) {
+		dev_err(&pdev->dev, "Can't allocate ope\n");
+		ret = -ENOMEM;
+		goto err;
 	}
 
-	ope = devm_kzalloc(&pdev->dev, sizeof(*ope), GFP_KERNEL);
-	if (!ope)
-		return -ENOMEM;
+	ope->soc_data = soc_data;
+	ope->is_shutdown = false;
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	regs = devm_ioremap_resource(&pdev->dev, mem);
-	if (IS_ERR(regs))
-		return PTR_ERR(regs);
+	if (!mem) {
+		dev_err(&pdev->dev, "No memory resource\n");
+		ret = -ENODEV;
+		goto err;
+	}
+
+	memregion = devm_request_mem_region(&pdev->dev, mem->start,
+					    resource_size(mem), pdev->name);
+	if (!memregion) {
+		dev_err(&pdev->dev, "Memory region already claimed\n");
+		ret = -EBUSY;
+		goto err;
+	}
+
+	regs = devm_ioremap(&pdev->dev, mem->start, resource_size(mem));
+	if (!regs) {
+		dev_err(&pdev->dev, "ioremap failed\n");
+		ret = -ENOMEM;
+		goto err;
+	}
+
 	ope->regmap = devm_regmap_init_mmio(&pdev->dev, regs,
 					    &tegra210_ope_regmap_config);
 	if (IS_ERR(ope->regmap)) {
 		dev_err(&pdev->dev, "regmap init failed\n");
-		return PTR_ERR(ope->regmap);
+		ret = PTR_ERR(ope->regmap);
+		goto err;
 	}
 	regcache_cache_only(ope->regmap, true);
 
 	dev_set_drvdata(&pdev->dev, ope);
 
-	ret = tegra210_peq_init(pdev, TEGRA210_PEQ_IORESOURCE_MEM);
+	ret = ope->soc_data->peq_soc_data.init(pdev,
+				TEGRA210_PEQ_IORESOURCE_MEM);
 	if (ret < 0) {
 		dev_err(&pdev->dev, "peq init failed\n");
-		return ret;
+		goto err;
 	}
 	regcache_cache_only(ope->peq_regmap, true);
 
-	ret = tegra210_mbdrc_init(pdev, TEGRA210_MBDRC_IORESOURCE_MEM);
+	ret = ope->soc_data->mbdrc_soc_data.init(pdev,
+				TEGRA210_MBDRC_IORESOURCE_MEM);
 	if (ret < 0) {
 		dev_err(&pdev->dev, "mbdrc init failed\n");
-		return ret;
+		goto err;
 	}
 	regcache_cache_only(ope->mbdrc_regmap, true);
 
+	if (of_property_read_u32(pdev->dev.of_node,
+				"nvidia,ahub-ope-id",
+				&pdev->dev.id) < 0) {
+		dev_err(&pdev->dev,
+			"Missing property nvidia,ahub-ope-id\n");
+		ret = -ENODEV;
+		goto err;
+	}
+
 	pm_runtime_enable(&pdev->dev);
+	if (!pm_runtime_enabled(&pdev->dev)) {
+		ret = tegra210_ope_runtime_resume(&pdev->dev);
+		if (ret)
+			goto err_pm_disable;
+	}
+
 	ret = snd_soc_register_codec(&pdev->dev, &tegra210_ope_codec,
 				     tegra210_ope_dais,
 				     ARRAY_SIZE(tegra210_ope_dais));
 	if (ret != 0) {
 		dev_err(&pdev->dev, "Could not register CODEC: %d\n", ret);
-		pm_runtime_disable(&pdev->dev);
-		return ret;
+		goto err_suspend;
 	}
 
 	pr_info("OPE platform probe successful\n");
 
 	return 0;
+
+err_suspend:
+	if (!pm_runtime_status_suspended(&pdev->dev))
+		tegra210_ope_runtime_suspend(&pdev->dev);
+err_pm_disable:
+	pm_runtime_disable(&pdev->dev);
+err:
+	return ret;
+}
+
+static void tegra210_ope_platform_shutdown(struct platform_device *pdev)
+{
+	struct tegra210_ope *ope = dev_get_drvdata(&pdev->dev);
+
+	ope->is_shutdown = true;
 }
 
 static int tegra210_ope_platform_remove(struct platform_device *pdev)
@@ -395,6 +479,7 @@ static struct platform_driver tegra210_ope_driver = {
 	},
 	.probe = tegra210_ope_platform_probe,
 	.remove = tegra210_ope_platform_remove,
+	.shutdown = tegra210_ope_platform_shutdown,
 };
 module_platform_driver(tegra210_ope_driver)
 

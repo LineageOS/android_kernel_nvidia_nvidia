@@ -1,7 +1,7 @@
 /*
  * tegra_asoc_util_virt_alt.h - Tegra xbar dai link for machine drivers
  *
- * Copyright (c) 2017-2022, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2017-2018, NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -20,6 +20,7 @@
 #define __LINUX_VIRT_UTIL_H
 
 #include <sound/soc.h>
+#include "tegra_asoc_metadata_util_alt.h"
 
 #define MIXER_CONFIG_SHIFT_VALUE 16
 #define STREAM_ID_SHIFT_VALUE    16
@@ -95,6 +96,12 @@
 	tegra_virt_t210mvc_get_mute,	\
 	tegra_virt_t210mvc_set_mute)
 
+#define ASRC_RATIO_INT_CTRL_DECL(ename, reg) \
+	SOC_SINGLE_EXT(ename, reg,	\
+	0, TEGRA186_ASRC_STREAM_RATIO_INTEGER_PART_MASK, 0,	\
+	tegra186_virt_asrc_get_int_ratio,	\
+	tegra186_virt_asrc_set_int_ratio)
+
 #define SOC_SINGLE_EXT_FRAC(xname, xregbase, xmax, xget, xput) \
 {       .iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = (xname), \
 	.info = snd_soc_info_xr_sx, .get = xget, \
@@ -108,6 +115,12 @@
 	TEGRA186_ASRC_STREAM_RATIO_MASK,	\
 	tegra186_virt_asrc_get_ratio,	\
 	tegra186_virt_asrc_set_ratio)
+
+#define ASRC_RATIO_FRAC_CTRL_DECL(ename, reg) \
+	SOC_SINGLE_EXT_FRAC(ename, reg,	\
+	TEGRA186_ASRC_STREAM_RATIO_FRAC_PART_MASK,	\
+	tegra186_virt_asrc_get_frac_ratio,	\
+	tegra186_virt_asrc_set_frac_ratio)
 
 #define ASRC_STREAM_RATIO_CTRL_DECL(ename, reg, src) \
 	SOC_ENUM_EXT_REG(ename, reg,	\
@@ -176,9 +189,10 @@
 
 #define I2S_SET_RATE(ename, reg) \
 	SOC_SINGLE_EXT(ename, reg,	\
-	0, 96000, 0,	\
+	0, 48000, 0,	\
 	tegra_virt_i2s_get_rate,	\
 	tegra_virt_i2s_set_rate)
+
 
 #define MIXER_SET_FADE(xname, xbase) \
 {	.iface = SNDRV_CTL_ELEM_IFACE_MIXER,	\
@@ -210,11 +224,16 @@
 	tegra_virt_t210ahub_get_regdump, \
 	tegra_virt_t210ahub_set_regdump)
 
-#define ADMA_REGDUMP_CTRL_DECL(ename, channel_id) \
-	SOC_SINGLE_EXT(ename, channel_id,  \
-	0, 1, 0,	\
-	tegra_virt_t210adma_get_regdump, \
-	tegra_virt_t210adma_set_regdump)
+#define METADATA_CTRL_DECL(ename) \
+	{.iface = SNDRV_CTL_ELEM_IFACE_MIXER, \
+	.name = ename, .info = tegra_bytes_info, \
+	.get = tegra_virt_get_metadata, \
+	.put = tegra_virt_set_metadata, \
+	.private_value = ((unsigned long)&(struct soc_bytes) \
+		{.base = 1, .mask = SNDRV_CTL_ELEM_TYPE_BYTES, \
+		.num_regs = (sizeof(uint16_t) * \
+		(TEGRA_AUDIO_METADATA_HDR_LENGTH + 1)), \
+		 })}
 
 #define ADDER_CTRL_DECL(name, id)	\
 	static const struct snd_kcontrol_new name[] = {	\
@@ -249,29 +268,6 @@ extern const int tegra186_arad_mux_value[];
 extern const char * const tegra186_arad_mux_text[];
 extern const char * const tegra186_asrc_ratio_source_text[];
 extern const char * const tegra210_mvc_curve_type_text[];
-
-static inline int tegra_register_component(struct device *dev,
-			const struct snd_soc_component_driver *component_driver,
-			struct snd_soc_dai_driver *dai_drv,
-			int num_dai, const char *debugfs_prefix)
-{
-	struct snd_soc_component *component;
-	int ret;
-
-	component = devm_kzalloc(dev, sizeof(*component), GFP_KERNEL);
-	if (!component)
-		return -ENOMEM;
-
-	ret = snd_soc_component_initialize(component, component_driver, dev);
-	if (ret < 0)
-		return ret;
-
-#ifdef CONFIG_DEBUG_FS
-	component->debugfs_prefix = debugfs_prefix;
-#endif
-
-	return snd_soc_add_component(component, dai_drv, num_dai);
-}
 
 int tegra_virt_t210mixer_get_gain(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol);
@@ -329,6 +325,17 @@ int tegra186_virt_asrc_get_ratio(struct snd_kcontrol *kcontrol,
 int tegra186_virt_asrc_set_ratio(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol);
 
+int tegra186_virt_asrc_get_int_ratio(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+
+int tegra186_virt_asrc_set_int_ratio(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+
+int tegra186_virt_asrc_get_frac_ratio(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+
+int tegra186_virt_asrc_set_frac_ratio(struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
 int tegra186_virt_asrc_get_ratio_source(struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol);
 int tegra186_virt_asrc_set_ratio_source(struct snd_kcontrol *kcontrol,
@@ -414,18 +421,31 @@ int tegra_virt_t210mixer_get_fade(
 	struct snd_ctl_elem_value *ucontrol);
 int tegra_virt_t210mixer_param_info(struct snd_kcontrol *kcontrol,
 		       struct snd_ctl_elem_info *uinfo);
+int tegra_metadata_get_init(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+int tegra_metadata_set_init(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+int tegra_metadata_get_enable(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+int tegra_metadata_set_enable(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+int tegra_metadata_setup(struct platform_device *pdev,
+	struct tegra_audio_metadata_cntx *psad,	struct snd_soc_card *card);
+int tegra_virt_set_metadata(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+int tegra_virt_get_metadata(
+	struct snd_kcontrol *kcontrol,
+	struct snd_ctl_elem_value *ucontrol);
+
 int tegra_virt_t210ahub_get_regdump(
 	struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol);
 int tegra_virt_t210ahub_set_regdump(
 	struct snd_kcontrol *kcontrol,
 	struct snd_ctl_elem_value *ucontrol);
-
-int tegra_virt_t210adma_set_regdump(
-	struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol);
-int tegra_virt_t210adma_get_regdump(
-	struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol);
-
 #endif
