@@ -1,7 +1,7 @@
 /*
  * tegra186_dspk_alt.c - Tegra186 DSPK driver
  *
- * Copyright (c) 2015-2020, NVIDIA CORPORATION.  All rights reserved.
+ * Copyright (c) 2015-2019 NVIDIA CORPORATION.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -23,17 +23,16 @@
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
 #include <linux/regmap.h>
+#include <linux/slab.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/pcm_params.h>
 #include <sound/soc.h>
 #include <linux/of_device.h>
-#include <linux/version.h>
-#if KERNEL_VERSION(4, 15, 0) > LINUX_VERSION_CODE
+#include <linux/debugfs.h>
 #include <soc/tegra/chip-id.h>
-#else
-#include <soc/tegra/fuse.h>
-#endif
+#include <linux/pinctrl/consumer.h>
+#include <linux/version.h>
 #include <linux/pinctrl/pinconf-tegra.h>
 
 #include "tegra210_xbar_alt.h"
@@ -99,7 +98,7 @@ static int tegra186_dspk_runtime_suspend(struct device *dev)
 	regcache_cache_only(dspk->regmap, true);
 	regcache_mark_dirty(dspk->regmap);
 
-	if (!(tegra_platform_is_fpga()))
+	if (!(tegra_platform_is_unit_fpga() || tegra_platform_is_fpga()))
 		clk_disable_unprepare(dspk->clk_dspk);
 
 	return 0;
@@ -110,7 +109,7 @@ static int tegra186_dspk_runtime_resume(struct device *dev)
 	struct tegra186_dspk *dspk = dev_get_drvdata(dev);
 	int ret;
 
-	if (!(tegra_platform_is_fpga())) {
+	if (!(tegra_platform_is_unit_fpga() || tegra_platform_is_fpga())) {
 		ret = clk_prepare_enable(dspk->clk_dspk);
 		if (ret) {
 			dev_err(dev, "clk_enable failed: %d\n", ret);
@@ -119,8 +118,9 @@ static int tegra186_dspk_runtime_resume(struct device *dev)
 	}
 
 	regcache_cache_only(dspk->regmap, false);
-	regcache_sync(dspk->regmap);
 
+	if (!dspk->is_shutdown)
+		regcache_sync(dspk->regmap);
 	return 0;
 }
 
@@ -160,8 +160,15 @@ static int tegra186_dspk_set_audio_cif(struct tegra186_dspk *dspk,
 		return -EINVAL;
 	}
 
-	tegra210_xbar_set_cif(dspk->regmap, TEGRA186_DSPK_AXBAR_RX_CIF_CTRL,
-			      &cif_conf);
+	dspk->soc_data->set_audio_cif(dspk->regmap,
+			TEGRA186_DSPK_AXBAR_RX_CIF_CTRL,
+			&cif_conf);
+	return 0;
+}
+
+static int tegra186_dspk_set_dai_bclk_ratio(struct snd_soc_dai *dai,
+		unsigned int ratio)
+{
 	return 0;
 }
 
@@ -179,7 +186,38 @@ static int tegra186_dspk_startup(struct snd_pcm_substream *substream,
 					dspk->prod_name);
 	}
 
+	if (!(tegra_platform_is_unit_fpga() || tegra_platform_is_fpga())) {
+		if (!IS_ERR_OR_NULL(dspk->pin_active_state)) {
+			ret = pinctrl_select_state(dspk->pinctrl,
+						dspk->pin_active_state);
+			if (ret < 0) {
+				dev_err(dev,
+				"setting dspk pinctrl active state failed\n");
+				return -EINVAL;
+			}
+		}
+	}
+
 	return 0;
+}
+
+static void tegra186_dspk_shutdown(struct snd_pcm_substream *substream,
+					struct snd_soc_dai *dai)
+{
+	struct device *dev = dai->dev;
+	struct tegra186_dspk *dspk = snd_soc_dai_get_drvdata(dai);
+	int ret;
+
+	if (!(tegra_platform_is_unit_fpga() || tegra_platform_is_fpga())) {
+		if (!IS_ERR_OR_NULL(dspk->pin_idle_state)) {
+			ret = pinctrl_select_state(
+				dspk->pinctrl, dspk->pin_idle_state);
+			if (ret < 0) {
+				dev_err(dev,
+				"setting dap pinctrl idle state failed\n");
+			}
+		}
+	}
 }
 
 static int tegra186_dspk_hw_params(struct snd_pcm_substream *substream,
@@ -196,7 +234,7 @@ static int tegra186_dspk_hw_params(struct snd_pcm_substream *substream,
 	srate = params_rate(params);
 	dspk_clk = (1 << (5+osr)) * srate * interface_clk_ratio;
 
-	if ((tegra_platform_is_fpga())) {
+	if ((tegra_platform_is_unit_fpga() || tegra_platform_is_fpga())) {
 		program_dspk_clk(dspk_clk);
 	} else {
 		ret = clk_set_rate(dspk->clk_dspk, dspk_clk);
@@ -227,88 +265,88 @@ static int tegra186_dspk_hw_params(struct snd_pcm_substream *substream,
 	return ret;
 }
 
+static int tegra186_dspk_codec_probe(struct snd_soc_codec *codec)
+{
+	struct tegra186_dspk *dspk = snd_soc_codec_get_drvdata(codec);
+
+	codec->control_data = dspk->regmap;
+	dspk->rx_fifo_th = 0;
+	dspk->osr_val = TEGRA186_DSPK_OSR_64;
+
+	return 0;
+}
+
 static struct snd_soc_dai_ops tegra186_dspk_dai_ops = {
 	.hw_params	= tegra186_dspk_hw_params,
+	.set_bclk_ratio	= tegra186_dspk_set_dai_bclk_ratio,
 	.startup	= tegra186_dspk_startup,
+	.shutdown	= tegra186_dspk_shutdown,
 };
 
 static struct snd_soc_dai_driver tegra186_dspk_dais[] = {
+	/* for left channel audio */
 	{
-	    .name = "CIF",
-	    .playback = {
-		.stream_name = "CIF Receive",
-		.channels_min = 1,
-		.channels_max = 2,
-		.rates = SNDRV_PCM_RATE_8000_48000,
-		.formats = SNDRV_PCM_FMTBIT_S16_LE |
-			   SNDRV_PCM_FMTBIT_S32_LE,
-	    },
-	},
-	{
-	    .name = "DAP",
+	    .name = "DAP Left",
 	    .capture = {
-		.stream_name = "DAP Transmit",
+		.stream_name = "DSPK Left Transmit",
 		.channels_min = 1,
 		.channels_max = 2,
 		.rates = SNDRV_PCM_RATE_8000_48000,
-		.formats = SNDRV_PCM_FMTBIT_S16_LE |
-			   SNDRV_PCM_FMTBIT_S32_LE,
+		.formats = SNDRV_PCM_FMTBIT_S16_LE,
 	    },
 	    .ops = &tegra186_dspk_dai_ops,
 	    .symmetric_rates = 1,
 	},
-	/* The second DAI is used when the output of the DSPK is connected
-	 * to two mono codecs. When the output of the DSPK is connected to
-	 * a single stereo codec, then only the first DAI should be used.
-	 */
 	{
-	    .name = "CIF2",
+	    .name = "CIF Right",
 	    .playback = {
-		.stream_name = "CIF2 Receive",
+		.stream_name = "DSPK Receive Right",
 		.channels_min = 1,
 		.channels_max = 2,
 		.rates = SNDRV_PCM_RATE_8000_48000,
-		.formats = SNDRV_PCM_FMTBIT_S16_LE |
-			   SNDRV_PCM_FMTBIT_S32_LE,
+		.formats = SNDRV_PCM_FMTBIT_S16_LE,
 	    },
+	    .ops = &tegra186_dspk_dai_ops,
+	    .symmetric_rates = 1,
 	},
+
+	/* for right channel audio */
 	{
-	    .name = "DAP2",
+	    .name = "DAP Right",
 	    .capture = {
-		.stream_name = "DAP2 Transmit",
+		.stream_name = "DSPK Right Transmit",
 		.channels_min = 1,
 		.channels_max = 2,
 		.rates = SNDRV_PCM_RATE_8000_48000,
-		.formats = SNDRV_PCM_FMTBIT_S16_LE |
-			   SNDRV_PCM_FMTBIT_S32_LE,
+		.formats = SNDRV_PCM_FMTBIT_S16_LE,
 	    },
+	    .ops = &tegra186_dspk_dai_ops,
 	    .symmetric_rates = 1,
 	},
 	{
-	    .name = "DUMMY_SINK",
+	    .name = "CIF Left",
 	    .playback = {
-		.stream_name = "Dummy Playback",
+		.stream_name = "DSPK Receive Left",
 		.channels_min = 1,
 		.channels_max = 2,
 		.rates = SNDRV_PCM_RATE_8000_48000,
-		.formats = SNDRV_PCM_FMTBIT_S16_LE |
-			   SNDRV_PCM_FMTBIT_S32_LE,
+		.formats = SNDRV_PCM_FMTBIT_S16_LE,
 	    },
-	},
+	    .ops = &tegra186_dspk_dai_ops,
+	    .symmetric_rates = 1,
+	}
 };
 
 static const struct snd_soc_dapm_widget tegra186_dspk_widgets[] = {
-	SND_SOC_DAPM_AIF_OUT("DAP TX", NULL, 0, TEGRA186_DSPK_ENABLE, 0, 0),
-	SND_SOC_DAPM_AIF_OUT("DAP2 TX", NULL, 0, 0, 0, 0),
-	SND_SOC_DAPM_SPK("Dummy Output", NULL),
+	SND_SOC_DAPM_AIF_IN("DSPK TX1", NULL, 0, TEGRA186_DSPK_ENABLE, 0, 0),
+	SND_SOC_DAPM_AIF_IN("DSPK TX2", NULL, 0, TEGRA186_DSPK_ENABLE, 0, 0),
 };
 
 static const struct snd_soc_dapm_route tegra186_dspk_routes[] = {
-	{ "DAP TX",	   NULL, "CIF Receive" },
-	{ "DAP Transmit", NULL, "DAP TX" },
-	{ "DAP2 TX", NULL, "CIF2 Receive" },
-	{ "DAP2 Transmit", NULL, "DAP2 TX" },
-	{ "Dummy Output",  NULL, "Dummy Playback" },
+	{ "DSPK TX1",	   NULL, "DSPK Receive Left" },
+	{ "DSPK Left Transmit", NULL, "DSPK TX1" },
+	{ "DSPK TX2",	   NULL, "DSPK Receive Right" },
+	{ "DSPK Right Transmit", NULL, "DSPK TX2" },
 };
 
 static const char * const tegra186_dspk_osr_text[] = {
@@ -337,6 +375,7 @@ static const struct snd_kcontrol_new tegrat186_dspk_controls[] = {
 };
 
 static struct snd_soc_codec_driver tegra186_dspk_codec = {
+	.probe = tegra186_dspk_codec_probe,
 	.idle_bias_off = 1,
 	.component_driver = {
 		.dapm_widgets = tegra186_dspk_widgets,
@@ -419,8 +458,12 @@ static const struct regmap_config tegra186_dspk_regmap_config = {
 	.cache_type = REGCACHE_FLAT,
 };
 
+static const struct tegra186_dspk_soc_data soc_data_tegra186 = {
+	.set_audio_cif = tegra210_xbar_set_cif,
+};
+
 static const struct of_device_id tegra186_dspk_of_match[] = {
-	{ .compatible = "nvidia,tegra186-dspk" },
+	{ .compatible = "nvidia,tegra186-dspk", .data = &soc_data_tegra186 },
 	{},
 };
 
@@ -428,64 +471,154 @@ static int tegra186_dspk_platform_probe(struct platform_device *pdev)
 {
 	struct tegra186_dspk *dspk;
 	struct device_node *np = pdev->dev.of_node;
-	struct resource *mem;
+	struct resource *mem, *memregion;
 	void __iomem *regs;
 	int ret = 0;
 	const struct of_device_id *match;
+	struct tegra186_dspk_soc_data *soc_data;
 
 	match = of_match_device(tegra186_dspk_of_match, &pdev->dev);
 	if (!match) {
 		dev_err(&pdev->dev, "Error: No device match found\n");
-		return -ENODEV;
+		ret = -ENODEV;
+		goto err;
+	}
+	soc_data = (struct tegra186_dspk_soc_data *)match->data;
+
+	dspk = devm_kzalloc(&pdev->dev, sizeof(struct tegra186_dspk),
+			GFP_KERNEL);
+	if (!dspk) {
+		dev_err(&pdev->dev, "Can't allocate dspk\n");
+		ret = -ENOMEM;
+		goto err;
 	}
 
-	dspk = devm_kzalloc(&pdev->dev, sizeof(*dspk), GFP_KERNEL);
-	if (!dspk)
-		return -ENOMEM;
-
+	dspk->soc_data = soc_data;
+	dspk->is_shutdown = false;
 	dspk->prod_name = NULL;
-	dspk->rx_fifo_th = 0;
-	dspk->osr_val = TEGRA186_DSPK_OSR_64;
-	dev_set_drvdata(&pdev->dev, dspk);
 
-	if (!(tegra_platform_is_fpga())) {
-		dspk->clk_dspk = devm_clk_get(&pdev->dev, "dspk");
+	if (!(tegra_platform_is_unit_fpga() || tegra_platform_is_fpga())) {
+		dspk->clk_dspk = devm_clk_get(&pdev->dev, NULL);
 		if (IS_ERR(dspk->clk_dspk)) {
 			dev_err(&pdev->dev, "Can't retrieve dspk clock\n");
-			return PTR_ERR(dspk->clk_dspk);
+			ret = PTR_ERR(dspk->clk_dspk);
+			goto err;
+		}
+
+		dspk->clk_pll_a_out0 = devm_clk_get(&pdev->dev, "pll_a_out0");
+		if (IS_ERR_OR_NULL(dspk->clk_pll_a_out0)) {
+			dev_err(&pdev->dev, "Can't retrieve pll_a_out0 clock\n");
+			ret = -ENOENT;
+		goto err;
+		}
+
+		ret = clk_set_parent(dspk->clk_dspk, dspk->clk_pll_a_out0);
+		if (ret) {
+			dev_err(&pdev->dev, "Can't set parent of dspk clock\n");
+			goto err;
 		}
 	}
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	regs = devm_ioremap_resource(&pdev->dev, mem);
-	if (IS_ERR(regs))
-		return PTR_ERR(regs);
+	if (!mem) {
+		dev_err(&pdev->dev, "No memory resource\n");
+		ret = -ENODEV;
+		goto err;
+	}
+
+	memregion = devm_request_mem_region(&pdev->dev, mem->start,
+					    resource_size(mem), pdev->name);
+	if (!memregion) {
+		dev_err(&pdev->dev, "Memory region already claimed\n");
+		ret = -EBUSY;
+		goto err;
+	}
+
+	regs = devm_ioremap(&pdev->dev, mem->start, resource_size(mem));
+	if (!regs) {
+		dev_err(&pdev->dev, "ioremap failed\n");
+		ret = -ENOMEM;
+		goto err;
+	}
+
 	dspk->regmap = devm_regmap_init_mmio(&pdev->dev, regs,
-					     &tegra186_dspk_regmap_config);
+					    &tegra186_dspk_regmap_config);
 	if (IS_ERR(dspk->regmap)) {
 		dev_err(&pdev->dev, "regmap init failed\n");
-		return PTR_ERR(dspk->regmap);
+		ret = PTR_ERR(dspk->regmap);
+		goto err;
 	}
 	regcache_cache_only(dspk->regmap, true);
 
+	if (of_property_read_u32(np, "nvidia,ahub-dspk-id",
+				&pdev->dev.id) < 0) {
+		dev_err(&pdev->dev,
+			"Missing property nvidia,ahub-dspk-id\n");
+		ret = -ENODEV;
+		goto err;
+	}
+
 	pm_runtime_enable(&pdev->dev);
+	if (!pm_runtime_enabled(&pdev->dev)) {
+		ret = tegra186_dspk_runtime_resume(&pdev->dev);
+		if (ret)
+			goto err_pm_disable;
+	}
+
 	ret = snd_soc_register_codec(&pdev->dev, &tegra186_dspk_codec,
 				     tegra186_dspk_dais,
 				     ARRAY_SIZE(tegra186_dspk_dais));
 	if (ret != 0) {
 		dev_err(&pdev->dev, "Could not register CODEC: %d\n", ret);
-		pm_runtime_disable(&pdev->dev);
-		return ret;
+		goto err_suspend;
 	}
 
 	if (of_property_read_string(np, "prod-name", &dspk->prod_name) == 0) {
 		ret = tegra_pinctrl_config_prod(&pdev->dev, dspk->prod_name);
 		if (ret < 0)
 			dev_warn(&pdev->dev, "Failed to set %s setting\n",
-				 dspk->prod_name);
+					dspk->prod_name);
 	}
 
+	dspk->pinctrl = devm_pinctrl_get(&pdev->dev);
+	if (IS_ERR(dspk->pinctrl)) {
+		dev_warn(&pdev->dev, "Missing pinctrl device\n");
+		goto err_dap;
+	}
+
+	dspk->pin_active_state = pinctrl_lookup_state(dspk->pinctrl,
+								"dap_active");
+	if (IS_ERR(dspk->pin_active_state)) {
+		dev_dbg(&pdev->dev, "Missing dap-active state\n");
+		goto err_dap;
+	}
+
+	dspk->pin_idle_state = pinctrl_lookup_state(dspk->pinctrl,
+							"dap_inactive");
+	if (IS_ERR(dspk->pin_idle_state)) {
+		dev_dbg(&pdev->dev, "Missing dap-inactive state\n");
+		goto err_dap;
+	}
+
+err_dap:
+	dev_set_drvdata(&pdev->dev, dspk);
+
 	return 0;
+
+err_suspend:
+	if (!pm_runtime_status_suspended(&pdev->dev))
+		tegra186_dspk_runtime_suspend(&pdev->dev);
+err_pm_disable:
+	pm_runtime_disable(&pdev->dev);
+err:
+	return ret;
+}
+
+static void tegra186_dspk_platform_shutdown(struct platform_device *pdev)
+{
+	struct tegra186_dspk *dspk = dev_get_drvdata(&pdev->dev);
+
+	dspk->is_shutdown = true;
 }
 
 static int tegra186_dspk_platform_remove(struct platform_device *pdev)
@@ -518,6 +651,7 @@ static struct platform_driver tegra186_dspk_driver = {
 	},
 	.probe = tegra186_dspk_platform_probe,
 	.remove = tegra186_dspk_platform_remove,
+	.shutdown = tegra186_dspk_platform_shutdown,
 };
 module_platform_driver(tegra186_dspk_driver);
 
