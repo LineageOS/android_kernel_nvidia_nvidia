@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8334ffb4_6d33bb6f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2023-02-06T06:54:19Z",
+      "side": 1,
+      "message": "For picking only. Until a proper fix can be made.",
+      "revId": "f4ee57a6b1ea2e0370b8f0afdf1978089f919439",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
