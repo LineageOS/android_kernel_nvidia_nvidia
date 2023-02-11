@@ -447,7 +447,7 @@ static int tegra21x_actmon_resume(struct platform_device *pdev)
 	struct device *mon_dev = &pdev->dev;
 	int ret = 0;
 
-	ret = tegra_actmon_resume();
+	ret = tegra_actmon_resume_t21x();
 	if (ret)
 		dev_err(mon_dev, "unable to resume actmon\n");
 

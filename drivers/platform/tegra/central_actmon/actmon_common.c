@@ -1057,7 +1057,7 @@ static int actmon_reset_deinit(struct platform_device *pdev)
 	return ret;
 }
 
-int tegra_actmon_resume()
+int tegra_actmon_resume_t21x()
 {
 	struct platform_device *pdev = actmon->pdev;
 	int ret = 0;
@@ -1098,7 +1098,7 @@ err_sample:
 
 	return ret;
 }
-EXPORT_SYMBOL_GPL(tegra_actmon_resume);
+EXPORT_SYMBOL_GPL(tegra_actmon_resume_t21x);
 
 int tegra_actmon_register(struct actmon_drv_data *actmon_data)
 {
