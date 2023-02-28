@@ -269,6 +269,7 @@ enum gscan_ch_attributes {
 };
 
 enum rtt_attributes {
+	RTT_ATTRIBUTE_INVALID,
 	RTT_ATTRIBUTE_TARGET_CNT,
 	RTT_ATTRIBUTE_TARGET_INFO,
 	RTT_ATTRIBUTE_TARGET_MAC,
@@ -292,6 +293,7 @@ enum rtt_attributes {
 };
 
 enum debug_attributes {
+	DEBUG_ATTRIBUTE_INVALID,
 	DEBUG_ATTRIBUTE_GET_DRIVER,
 	DEBUG_ATTRIBUTE_GET_FW,
 	DEBUG_ATTRIBUTE_RING_ID,
@@ -308,6 +310,7 @@ enum debug_attributes {
 };
 
 enum mkeep_alive_attributes {
+	MKEEP_ALIVE_ATTRIBUTE_INVALID,
 	MKEEP_ALIVE_ATTRIBUTE_ID,
 	MKEEP_ALIVE_ATTRIBUTE_IP_PKT,
 	MKEEP_ALIVE_ATTRIBUTE_IP_PKT_LEN,
@@ -318,6 +321,7 @@ enum mkeep_alive_attributes {
 };
 
 enum wifi_rssi_monitor_attr {
+	RSSI_MONITOR_ATTRIBUTE_INVALID,
 	RSSI_MONITOR_ATTRIBUTE_MAX_RSSI,
 	RSSI_MONITOR_ATTRIBUTE_MIN_RSSI,
 	RSSI_MONITOR_ATTRIBUTE_START,
@@ -344,6 +348,7 @@ typedef enum wl_vendor_event {
 } wl_vendor_event_t;
 
 enum andr_wifi_attr {
+	ANDR_WIFI_ATTRIBUTE_INVALID,
 	ANDR_WIFI_ATTRIBUTE_NUM_FEATURE_SET,
 	ANDR_WIFI_ATTRIBUTE_FEATURE_SET,
 	ANDR_WIFI_ATTRIBUTE_RANDOM_MAC_OUI,
