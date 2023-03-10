@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "aba71ad5_8f6c1101",
+        "filename": "drivers/video/tegra/dc/dsi_padctrl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2023-03-10T02:16:44Z",
+      "side": 1,
+      "message": "Whitespace",
+      "revId": "adf9d4c3e032117ed21f868231839732a516437c",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
