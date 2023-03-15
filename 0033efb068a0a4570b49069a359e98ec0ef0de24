@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ceba95d3_2da01568",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2023-03-15T19:31:18Z",
+      "side": 1,
+      "message": "Tagging everyone with interest in dsi support on the tegra common kernel. Some proper code review would be appreciated.\n\nVerified on icosa, seamless display works without dc resets. Verified no regressions on smaug. Someone that had display glitches on smaug might test this chain to see if this resolves them.",
+      "revId": "0033efb068a0a4570b49069a359e98ec0ef0de24",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
