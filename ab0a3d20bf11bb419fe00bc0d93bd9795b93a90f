@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c8c9fd47_3bf60b96",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2023-03-15T19:24:52Z",
+      "side": 1,
+      "message": "Based on the commit message, this isn\u0027t strictly needed as no supported dsi panel has vrr, but won\u0027t hurt.",
+      "revId": "ab0a3d20bf11bb419fe00bc0d93bd9795b93a90f",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
