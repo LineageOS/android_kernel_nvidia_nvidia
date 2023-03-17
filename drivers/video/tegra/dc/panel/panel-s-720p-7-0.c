@@ -22,7 +22,6 @@
 
 #include "../dc.h"
 #include "../dsi.h"
-#include "board.h"
 #include "board-panel.h"
 #include "gpio-names.h"
 
