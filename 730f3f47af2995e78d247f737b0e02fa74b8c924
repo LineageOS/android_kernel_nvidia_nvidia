@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5cc43194_be5b2292",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2023-03-17T03:15:30Z",
+      "side": 1,
+      "message": "Verified booting smaug, panel works in recovery and android with no glitches. Note that most of the dsi command logic is in the kernel dt.",
+      "revId": "730f3f47af2995e78d247f737b0e02fa74b8c924",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
