@@ -1064,7 +1064,11 @@ static int snd_atvr_schedule_timer(struct snd_pcm_substream *substream)
 	return ret;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
 static void snd_atvr_timer_callback(struct timer_list *timer)
+#else
+static void snd_atvr_timer_callback(unsigned long data)
+#endif
 {
 	uint readable;
 	uint packets_read;
@@ -1385,7 +1389,11 @@ static int snd_atvr_pcm_open(struct snd_pcm_substream *substream)
 	g_substream = substream;
 	mutex_unlock(&g_substream_lock);
 	/* Initialize the timer for the opened substream */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
 	timer_setup(&atvr_snd->decoding_timer, snd_atvr_timer_callback, 0);
+#else
+	setup_timer(&atvr_snd->decoding_timer, snd_atvr_timer_callback, 0);
+#endif
 
 	return ret;
 }
@@ -1576,8 +1584,13 @@ static int atvr_snd_initialize(struct hid_device *hdev,
 	if (err)
 		goto __nodev;
 	/* dummy initialization */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
 	timer_setup(&atvr_snd->decoding_timer,
 		snd_atvr_timer_callback, 0);
+#else
+	setup_timer(&atvr_snd->decoding_timer,
+		snd_atvr_timer_callback, 0);
+#endif
 
 	for (i = 0; i < MAX_PCM_DEVICES && i < pcm_devs[dev]; i++) {
 		if (pcm_substreams[dev] < 1)
