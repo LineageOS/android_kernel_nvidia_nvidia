@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "854f8af9_3ac60e05",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2023-03-30T03:05:12Z",
+      "side": 1,
+      "message": "Verified it builds on both 4.9 and 5.10 targets. Verified on galen that thunderstrike works in recovery.",
+      "revId": "2cd9f87fdbeed53628ce1340a76a04a55bc5f175",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
