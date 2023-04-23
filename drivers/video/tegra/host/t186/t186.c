@@ -63,6 +63,7 @@ static struct host1x_device_info host1x04_info = {
 	.nb_syncpt_irqs	= 1,
 	.syncpt_policy	= SYNCPT_PER_CHANNEL_INSTANCE,
 	.channel_policy	= MAP_CHANNEL_ON_SUBMIT,
+	.firmware_area_size = SZ_1M,
 	.nb_actmons = 1,
 };
 
@@ -104,6 +105,7 @@ static struct host1x_device_info host1xb04_info = {
 	.nb_syncpt_irqs	= 1,
 	.syncpt_policy	= SYNCPT_PER_CHANNEL_INSTANCE,
 	.channel_policy	= MAP_CHANNEL_ON_SUBMIT,
+	.firmware_area_size = SZ_1M,
 	.ctrl_name	= "ctrlb",
 };
 
