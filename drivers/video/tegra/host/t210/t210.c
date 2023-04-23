@@ -67,6 +67,7 @@ static struct host1x_device_info host1x04_info = {
 	.nb_syncpt_irqs	= 1,
 	.syncpt_policy	= SYNCPT_PER_CHANNEL,
 	.nb_actmons	= 1,
+	/* firmware_area_size=0 as no isolate_contexts=y */
 };
 
 struct nvhost_device_data t21_host1x_info = {
