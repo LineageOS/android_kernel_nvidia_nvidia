@@ -144,6 +144,7 @@ void iommu_context_dev_release(struct platform_device *pdev)
 	mutex_unlock(&iommu_ctx_list_mutex);
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,10,0)
 static int __iommu_context_dev_map_static(struct platform_device *pdev,
 					  struct iommu_static_mapping *mapping)
 {
@@ -206,6 +207,18 @@ int iommu_context_dev_map_static(void *vaddr, dma_addr_t paddr, size_t size)
 
 	return 0;
 }
+#else
+static int __iommu_context_dev_map_static(struct platform_device *pdev,
+					  struct iommu_static_mapping *mapping)
+{
+	return 0;
+}
+
+int iommu_context_dev_map_static(void *vaddr, dma_addr_t paddr, size_t size)
+{
+	return 0;
+}
+#endif
 
 static int iommu_context_dev_probe(struct platform_device *pdev)
 {
