@@ -1953,7 +1953,7 @@ static int tegra_dc_ext_flip(struct tegra_dc_ext_user *user,
 		if (ret) {
 			dev_err(&ext->dc->ndev->dev,
 				"Couldn't find corresponding PROPOSE\n");
-			goto fail_pin;
+			//goto fail_pin;
 		}
 
 		trace_display_imp_flip_queued(ext->dc->ctrl_num,
