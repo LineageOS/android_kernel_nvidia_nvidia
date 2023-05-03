@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9c019579_6fe4db32",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2023-05-03T22:12:35Z",
+      "side": 1,
+      "message": "For picking only. The underlying issue causing the hwc to fail should be fixed.",
+      "revId": "827191e02bdaa12515ea4f1af34d33939a416fba",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
