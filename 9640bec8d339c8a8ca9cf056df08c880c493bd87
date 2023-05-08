@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5d081851_a32190f1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2023-05-08T03:02:04Z",
+      "side": 1,
+      "message": "Fixes compile with kernel-5.10 after restoring t186 vic static memory handling. Since this handling is not used on t194+ and did not exist on the 5.10 kernel, stubbing out the functions is safe.",
+      "revId": "9640bec8d339c8a8ca9cf056df08c880c493bd87",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
