@@ -22,7 +22,9 @@
 #if defined(RTW_ENABLE_WIFI_CONTROL_FUNC)
 #include <linux/platform_device.h>
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
+#if defined(CONFIG_WIFI_CONTROL_FUNC)
 	#include <linux/wlan_plat.h>
+#endif
 #else
 	#include <linux/wifi_tiwlan.h>
 #endif
@@ -38,6 +40,21 @@
 #endif
 
 #include "rtw_version.h"
+
+#if !defined(CONFIG_WIFI_CONTROL_FUNC)
+struct wifi_platform_data {
+	int (*set_power)(int val);
+	int (*set_reset)(int val);
+	int (*set_carddetect)(int val);
+	void *(*mem_prealloc)(int section, unsigned long size);
+	int (*get_mac_addr)(unsigned char *buf);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 0))
+	void *(*get_country_code)(char *ccode, u32 flags);
+#else
+	void *(*get_country_code)(char *ccode);
+#endif
+};
+#endif /* CONFIG_WIFI_CONTROL_FUNC */
 
 extern void macstr2num(u8 *dst, u8 *src);
 
