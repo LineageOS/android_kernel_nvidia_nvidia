@@ -1036,7 +1036,9 @@ int tegracam_ctrl_handler_init(struct tegracam_ctrl_handler *handler)
 	const struct tegracam_ctrl_ops *ops = handler->ctrl_ops;
 	const u32 *cids = NULL;
 	u32 numctrls = 0;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 5, 0)
 	u8 compound_control_default_byte_value = 0xff;
+#endif
 	int i, j;
 	int err = 0;
 
@@ -1084,8 +1086,10 @@ int tegracam_ctrl_handler_init(struct tegracam_ctrl_handler *handler)
 				return -EINVAL;
 			}
 			ctrl_cfg->dims[0] = size;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 5, 0)
 			ctrl_cfg->p_def = v4l2_ctrl_ptr_create(
 				(void *)&compound_control_default_byte_value);
+#endif
 		}
 
 		ctrl = v4l2_ctrl_new_custom(&handler->ctrl_handler,
