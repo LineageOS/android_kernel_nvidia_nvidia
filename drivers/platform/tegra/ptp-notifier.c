@@ -99,7 +99,7 @@ int tegra_get_hwtime(const char *intf_name, void *ts, int ts_type)
 {
 	unsigned long flags;
 	int ret = 0, index = 0;
-	struct net_device *dev;
+	struct net_device *dev = NULL;
 
 	raw_spin_lock_irqsave(&ptp_notifier_lock, flags);
 	if (!intf_name || !ts) {
