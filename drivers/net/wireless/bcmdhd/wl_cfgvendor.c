@@ -138,7 +138,7 @@ static int wl_cfgvendor_unsupported_feature(struct wiphy *wiphy,
         struct wireless_dev *wdev, const void  *data, int len)
 {
 	// return unsupported error code
-	return WIFI_ERROR_NOT_SUPPORTED;
+	return -EOPNOTSUPP;
 }
 
 static int wl_cfgvendor_set_country(struct wiphy *wiphy,
