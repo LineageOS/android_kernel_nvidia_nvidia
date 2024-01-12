@@ -106,7 +106,9 @@ static int camrtc_hsp_sendrecv(struct camrtc_hsp *camhsp,
 	return ret;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0)
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0)) && \
+     !((LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 146)) && \
+       (LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0)))
 static struct device_node *of_get_compatible_child(
 	const struct device_node *parent,
 	const char *compatible)
