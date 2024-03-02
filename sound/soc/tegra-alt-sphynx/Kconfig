@@ -1,0 +1,132 @@
+if SND_SOC
+if SND_SOC_TEGRA_ALT_SPHYNX
+
+config SND_SOC_TEGRA_ALT_SPHYNX
+	tristate "Alternative DAPM-based SoC audio support for the Tegra System-on-Chip"
+	depends on ARCH_TEGRA
+        depends on SND_DMAENGINE_PCM
+	select REGMAP_MMIO
+	select SND_DYNAMIC_MINORS
+	help
+	  Say Y or M here if you want support for SoC audio on Tegra, using the
+	  alternative driver that exposes to user-space the full routing capabilities
+	  of the AHUB (Audio HUB) hardware module.
+
+config SND_SOC_TEGRA_ALT_210_SPHYNX
+	def_bool y
+	depends on SND_SOC_TEGRA_ALT_SPHYNX
+
+config SND_SOC_TEGRA210_XBAR_ALT
+	tristate "Tegra210 XBAR driver"
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 XBAR module.
+
+config SND_SOC_TEGRA210_ADMAIF_ALT
+	tristate "Tegra210 ADMIF driver"
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 APBIF module.
+
+config SND_SOC_TEGRA210_I2S_ALT
+	tristate "Tegra210 I2S driver"
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 I2S module.
+
+config SND_SOC_TEGRA210_DMIC_ALT
+	tristate "Tegra210 DMIC driver"
+	def_tristate SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 DMIC module.
+
+config SND_SOC_TEGRA210_AMX_ALT
+	tristate "Tegra210 AMX driver"
+	def_tristate SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 AMX module.
+
+config SND_SOC_TEGRA210_ADX_ALT
+	tristate "Tegra210 ADX driver"
+	def_tristate SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 ADX module.
+
+config SND_SOC_TEGRA210_MIXER_ALT
+	tristate "Tegra210 MIXER driver"
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 MIXER module.
+
+config SND_SOC_TEGRA210_SFC_ALT
+	tristate "Tegra210 SFC driver"
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 SFC module.
+
+config SND_SOC_TEGRA210_AFC_ALT
+	tristate "Tegra210 AFC driver"
+	def_tristate SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 AFC module.
+
+config SND_SOC_TEGRA210_MVC_ALT
+	tristate "Tegra210 MVC driver"
+	def_tristate SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 MVC module.
+
+config SND_SOC_TEGRA210_IQC_ALT
+	tristate "Tegra210 IQC driver"
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 IQC module.
+
+config SND_SOC_TEGRA210_OPE_ALT
+	tristate "Tegra210 OPE driver"
+	def_tristate SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra210 OPE module.
+
+config SND_SOC_TEGRA210_ADSP_ALT
+	tristate "Tegra210 ADSP driver"
+	def_tristate SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX && TEGRA_NVADSP
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && SND_SOC_TEGRA_ALT_210_SPHYNX && TEGRA_NVADSP
+	select SND_SOC_COMPRESS
+	help
+	  Say Y or M if you want to add support for Tegra210 ADSP module.
+
+config SND_SOC_TEGRA_ASOC_MACHINE_ALT
+	tristate "Tegra ASoC machine driver"
+	depends on SND_SOC_TEGRA_ALT_SPHYNX
+	help
+	  Say Y or M if you want to add support for Tegra ASoC machine driver
+
+config SND_SOC_TEGRA_T210REF_MOBILE_RT5677_ALT
+	tristate "SoC Audio support for T210Ref mobile"
+	depends on SND_SOC_TEGRA_ALT_SPHYNX && I2C
+	depends on ARCH_TEGRA_210_SOC
+	select SND_SOC_TEGRA210_XBAR_ALT
+	select SND_SOC_TEGRA210_PCM_ALT
+	select SND_SOC_TEGRA210_ADMA_ALT
+	select SND_SOC_TEGRA210_ADMAIF_ALT
+	select SND_SOC_TEGRA210_I2S_ALT
+	select SND_SOC_TEGRA210_MIXER_ALT
+	select SND_SOC_TEGRA210_SFC_ALT
+	select SND_SOC_SPDIF
+	select SND_SOC_RT5677
+	select SND_SOC_RT5677_SPI
+	select SND_SOC_MAX98357A
+	select SND_SOC_NAU8825
+	select SND_SOC_TEGRA_ASOC_MACHINE_ALT
+	help
+	  Say Y or M here.
+
+endif
+endif
