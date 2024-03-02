@@ -1,4 +1,3 @@
-ifndef SND_SOC_TEGRA_ALT_SPHYNX
 GCOV_PROFILE := y
 
 subdir-ccflags-y := -Werror
@@ -7,7 +6,7 @@ subdir-ccflags-y += -I$(srctree)
 subdir-ccflags-y += -I$(srctree)/sound/soc/codecs/
 subdir-ccflags-y += -I$(srctree.nvidia)
 subdir-ccflags-y += -I$(srctree.nvidia)/sound/soc/tegra-virt-alt/
-subdir-ccflags-y += -I$(srctree.nvidia)/sound/soc/tegra-alt/include/
+subdir-ccflags-y += -I$(srctree.nvidia)/sound/soc/tegra-alt-sphynx/include/
 
 #----------------------------- utility drivers --------------------------------------
 CFLAGS_tegra_pcm_alt.o 				+= -Wno-shift-count-overflow
@@ -15,12 +14,11 @@ CFLAGS_tegra_pcm_alt.o 				+= -Wno-shift-count-overflow
 snd-soc-tegra-alt-utils-objs 			:= utils/tegra_asoc_utils_alt.o		\
 							utils/tegra_pcm_alt.o		\
 							utils/tegra_asoc_machine_alt.o	\
-							utils/tegra_asoc_dt_parser.o \
 							utils/tegra_isomgr_bw_alt.o	\
 							utils/ahub_unit_fpga_clock.o	\
 							utils/tegra210_xbar_utils_alt.o
 
-obj-$(CONFIG_SND_SOC_TEGRA_ALT)			+= snd-soc-tegra-alt-utils.o
+obj-$(CONFIG_SND_SOC_TEGRA_ALT_SPHYNX)			+= snd-soc-tegra-alt-utils.o
 
 #----------------------------- platform drivers -------------------------------------
 snd-soc-tegra210-alt-admaif-objs 		:= tegra210_admaif_alt.o
@@ -63,8 +61,11 @@ obj-$(CONFIG_SND_SOC_TEGRA186_DSPK_ALT)		+= snd-soc-tegra186-alt-dspk.o
 snd-soc-tegra-alt-p1889ref-objs			:= machine_drivers/tegra_p1889ref_alt.o
 snd-soc-tegra-alt-t210ref-objs			:= machine_drivers/tegra_t210ref_alt.o
 snd-soc-tegra-alt-t186ref-objs			:= machine_drivers/tegra_t186ref_alt.o
-snd-soc-tegra-machine-driver-objs		:= machine_drivers/tegra_machine_driver.o
+snd-soc-tegra-machine-driver-mobile-objs	:= machine_drivers/tegra_machine_driver_mobile.o
+snd-soc-tegra-machine-driver-rt5677-mobile-objs	:= machine_drivers/tegra_machine_driver_rt5677_mobile.o
 snd-soc-tegra-alt-t186ref-p2382-objs		:= machine_drivers/tegra_t186ref_p2382_alt.o
+snd-soc-tegra-alt-t186ref-bali-objs		:= machine_drivers/tegra_t186ref_bali_alt.o
+snd-soc-tegra-alt-t186ref-boden-objs		:= machine_drivers/tegra_t186ref_boden_alt.o
 snd-soc-tegra-alt-t186ref-p4573-objs		:= machine_drivers/tegra_t186ref_p4573_alt.o
 snd-soc-tegra-alt-t210ref-p2382-objs		:= machine_drivers/tegra_t210ref_p2382_alt.o \
                                                 	machine_drivers/tegra_maui_alt.o
@@ -73,7 +74,10 @@ obj-$(CONFIG_SND_SOC_TEGRA_P1889REF_ALT)	+= snd-soc-tegra-alt-p1889ref.o
 obj-$(CONFIG_SND_SOC_TEGRA_T210REF_ALT)		+= snd-soc-tegra-alt-t210ref.o
 obj-$(CONFIG_SND_SOC_TEGRA_T210REF_P2382_ALT)	+= snd-soc-tegra-alt-t210ref-p2382.o
 obj-$(CONFIG_SND_SOC_TEGRA_T186REF_FPGA_ALT)	+= snd-soc-tegra-alt-t186ref.o
-obj-$(CONFIG_SND_SOC_TEGRA210_AUDIO_ALT)          += snd-soc-tegra-machine-driver.o
+obj-$(CONFIG_SND_SOC_TEGRA_T210REF_MOBILE_ALT)	+= snd-soc-tegra-machine-driver-mobile.o
+obj-$(CONFIG_SND_SOC_TEGRA_T210REF_MOBILE_RT5677_ALT) += snd-soc-tegra-machine-driver-rt5677-mobile.o
+obj-$(CONFIG_SND_SOC_TEGRA_T186REF_MOBILE_ALT)	+= snd-soc-tegra-machine-driver-mobile.o
 obj-$(CONFIG_SND_SOC_TEGRA_T186REF_AUTO_ALT)	+= snd-soc-tegra-alt-t186ref-p2382.o
+obj-$(CONFIG_SND_SOC_TEGRA_T186REF_AUTO_ALT)	+= snd-soc-tegra-alt-t186ref-bali.o
+obj-$(CONFIG_SND_SOC_TEGRA_T186REF_AUTO_ALT)	+= snd-soc-tegra-alt-t186ref-boden.o
 obj-$(CONFIG_SND_SOC_TEGRA_T186REF_P4573_ALT)	+= snd-soc-tegra-alt-t186ref-p4573.o
-endif
