@@ -4,4 +4,5 @@ endif
 
 if SND_SOC && ("$(VERSION)" < "5")
 source "sound/soc/tegra-alt/Kconfig"
+source "sound/soc/tegra-alt-sphynx/Kconfig"
 endif
