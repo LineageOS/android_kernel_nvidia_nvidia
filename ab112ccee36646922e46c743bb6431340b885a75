@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0e4de5ec_c288aca4",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2024-03-05T18:01:32Z",
+      "side": 1,
+      "message": "The conditionals match now. I want to do some further testing against other tegra targets before merging this.",
+      "revId": "ab112ccee36646922e46c743bb6431340b885a75",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
