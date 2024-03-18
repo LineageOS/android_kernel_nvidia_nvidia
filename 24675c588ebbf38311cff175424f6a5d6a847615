@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6d3a51fc_1b31b5dc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 8
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2024-03-18T00:38:32Z",
+      "side": 1,
+      "message": "Verified that foster and quill do not regress. I still don\u0027t know how these ifdefs don\u0027t break when sphynx audio is enabled, though. But if the sphynx maintainers say it works, then why not?",
+      "revId": "24675c588ebbf38311cff175424f6a5d6a847615",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
