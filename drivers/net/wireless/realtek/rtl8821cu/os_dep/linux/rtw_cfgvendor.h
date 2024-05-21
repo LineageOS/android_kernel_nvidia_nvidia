@@ -216,6 +216,7 @@ enum gscan_ch_attributes {
 };
 
 enum wifi_rssi_monitor_attr {
+        RSSI_MONITOR_ATTRIBUTE_INVALID,
         RSSI_MONITOR_ATTRIBUTE_MAX_RSSI,
         RSSI_MONITOR_ATTRIBUTE_MIN_RSSI,
         RSSI_MONITOR_ATTRIBUTE_START,
@@ -223,6 +224,7 @@ enum wifi_rssi_monitor_attr {
 
 
 enum rtt_attributes {
+	RTT_ATTRIBUTE_INVALID,
 	RTT_ATTRIBUTE_TARGET_CNT,
 	RTT_ATTRIBUTE_TARGET_INFO,
 	RTT_ATTRIBUTE_TARGET_MAC,
@@ -269,6 +271,7 @@ typedef enum rtw_vendor_event {
 } rtw_vendor_event_t;
 
 enum andr_wifi_feature_set_attr {
+	ANDR_WIFI_ATTRIBUTE_INVALID,
 	ANDR_WIFI_ATTRIBUTE_NUM_FEATURE_SET,
 	ANDR_WIFI_ATTRIBUTE_FEATURE_SET,
 	ANDR_WIFI_ATTRIBUTE_RANDOM_MAC_OUI,
