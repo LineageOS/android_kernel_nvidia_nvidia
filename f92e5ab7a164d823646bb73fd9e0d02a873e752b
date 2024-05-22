@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f28645a5_d3b32bdb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 14048
+      },
+      "writtenOn": "2024-05-22T03:33:26Z",
+      "side": 1,
+      "message": "Copied from the bcmdhd commits. Tegra targets are using the bcm hal for these rtl cards since the driver interface matches that instead of the realtek hal.",
+      "revId": "f92e5ab7a164d823646bb73fd9e0d02a873e752b",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
