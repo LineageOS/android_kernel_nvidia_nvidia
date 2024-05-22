@@ -1396,7 +1396,7 @@ static int rtw_cfgvendor_logger_start_logging(struct wiphy *wiphy,
 				break;
 			default:
 				RTW_ERR("Unknown type: %d\n", type);
-				ret = WIFI_ERROR_INVALID_ARGS;
+				ret = -EINVAL;
 				goto exit;
 		}
 	}
@@ -1525,7 +1525,7 @@ static int rtw_cfgvendor_logger_get_ring_data(struct wiphy *wiphy,
 static int rtw_cfgvendor_logger_get_firmware_memory_dump(struct wiphy *wiphy,
 	struct wireless_dev *wdev, const void  *data, int len)
 {
-	int ret = WIFI_ERROR_NOT_SUPPORTED;
+	int ret = -EOPNOTSUPP;
 
 	return ret;
 }
@@ -1533,25 +1533,19 @@ static int rtw_cfgvendor_logger_get_firmware_memory_dump(struct wiphy *wiphy,
 static int rtw_cfgvendor_logger_start_pkt_fate_monitoring(struct wiphy *wiphy,
 	struct wireless_dev *wdev, const void  *data, int len)
 {
-	int ret = WIFI_SUCCESS;
-
-	return ret;
+	return 0;
 }
 
 static int rtw_cfgvendor_logger_get_tx_pkt_fates(struct wiphy *wiphy,
 	struct wireless_dev *wdev, const void  *data, int len)
 {
-	int ret = WIFI_SUCCESS;
-
-	return ret;
+	return 0;
 }
 
 static int rtw_cfgvendor_logger_get_rx_pkt_fates(struct wiphy *wiphy,
 	struct wireless_dev *wdev, const void  *data, int len)
 {
-	int ret = WIFI_SUCCESS;
-
-	return ret;
+	return 0;
 }
 
 #endif /* CONFIG_RTW_CFGVENDOR_WIFI_LOGGER */

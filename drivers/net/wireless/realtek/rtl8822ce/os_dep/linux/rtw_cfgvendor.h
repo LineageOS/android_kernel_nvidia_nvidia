@@ -348,21 +348,6 @@ typedef struct {
     int primary_frequency;
 } wifi_channel_spec;
 
-typedef enum {
-    WIFI_SUCCESS = 0,
-    WIFI_ERROR_NONE = 0,
-    WIFI_ERROR_UNKNOWN = -1,
-    WIFI_ERROR_UNINITIALIZED = -2,
-    WIFI_ERROR_NOT_SUPPORTED = -3,
-    WIFI_ERROR_NOT_AVAILABLE = -4,              // Not available right now, but try later
-    WIFI_ERROR_INVALID_ARGS = -5,
-    WIFI_ERROR_INVALID_REQUEST_ID = -6,
-    WIFI_ERROR_TIMED_OUT = -7,
-    WIFI_ERROR_TOO_MANY_REQUESTS = -8,          // Too many instances of this request
-    WIFI_ERROR_OUT_OF_MEMORY = -9,
-    WIFI_ERROR_BUSY = -10,
-} wifi_error;
-
 typedef int wifi_ring_buffer_id;
 /* ring buffer params */
 /**
