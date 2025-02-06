@@ -2,6 +2,14 @@ GCOV_PROFILE := y
 
 subdir-ccflags-y += -Werror
 
+ifeq ($(VERSION), 4)
+ifeq ($(PATCHLEVEL), 9)
+ifeq ($(cc-name),clang)
+subdir-ccflags-y += -Wno-void-pointer-to-enum-cast
+endif
+endif
+endif
+
 ################################################################################
 # tegra platform drivers
 obj-$(CONFIG_ARCH_TEGRA_18x_SOC)		+= tegra_cpufreq.o
