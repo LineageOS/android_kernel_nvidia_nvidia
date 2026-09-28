@@ -63,7 +63,7 @@
 #include "t239/t239.h"
 #endif
 
-#define FW_NAME_SIZE			32
+#define FW_NAME_SIZE			40
 
 static inline struct flcn **get_nvdec(struct platform_device *dev)
 {
@@ -114,16 +114,20 @@ static int nvdec_get_bl_fw_name(struct platform_device *pdev, char *name)
 static void nvdec_get_fw_name(struct platform_device *pdev, char *name)
 {
 	u8 maj, min;
+	const char *suffix = "";
 	struct nvhost_device_data *pdata = platform_get_drvdata(pdev);
 	u32 debug_mode = host1x_readl(pdev, nvdec_scp_ctl_stat_r()) &
 					nvdec_scp_ctl_stat_debug_mode_m();
 
+	if (of_machine_is_compatible("nvidia,tegra210b01"))
+		suffix = "_tegra210b01";
 	nvdec_decode_ver(pdata->version, &maj, &min);
 	if (debug_mode)
-		snprintf(name, FW_NAME_SIZE, "nvhost_nvdec0%d%d.fw", maj, min);
+		snprintf(name, FW_NAME_SIZE, "nvhost_nvdec0%d%d%s.fw", maj,
+			min, suffix);
 	else
-		snprintf(name, FW_NAME_SIZE, "nvhost_nvdec0%d%d_prod.fw", maj,
-			min);
+		snprintf(name, FW_NAME_SIZE, "nvhost_nvdec0%d%d%s_prod.fw",
+			maj, min, suffix);
 
 	dev_info(&pdev->dev, "fw name:%s\n", name);
 }
