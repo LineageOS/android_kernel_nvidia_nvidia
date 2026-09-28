@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "21a80b57_31bf697e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 38133
+      },
+      "writtenOn": "2026-09-28T22:03:15Z",
+      "side": 1,
+      "message": "Tested on darcy (T210); this patchset targets T210B01. Worked fine with a minor change, uploaded as patchset 4.",
+      "revId": "569273f19961bd59cd497fe320c48d0e46260b07",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
